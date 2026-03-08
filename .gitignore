@@ -1,0 +1,41 @@
+# Dependencies
+node_modules/
+server/venv/
+server/__pycache__/
+
+# Environment variables (NEVER push API keys)
+server/.env
+.env
+.env.local
+.env.*.local
+
+# Build output
+dist/
+build/
+
+# Database (generated at runtime)
+server/medai.db
+
+# FAISS index (generated at runtime)
+server/faiss_index/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db

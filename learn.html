@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>MedAI — Learn LLM, LangChain, LangGraph & RAG</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
+
+  :root {
+    --bg: #0f172a;
+    --bg2: #1e293b;
+    --bg3: #334155;
+    --border: #475569;
+    --text: #e2e8f0;
+    --text2: #94a3b8;
+    --blue: #3b82f6;
+    --blue2: #60a5fa;
+    --green: #22c55e;
+    --green2: #4ade80;
+    --purple: #a855f7;
+    --purple2: #c084fc;
+    --orange: #f97316;
+    --orange2: #fb923c;
+    --red: #ef4444;
+    --cyan: #06b6d4;
+    --cyan2: #22d3ee;
+    --yellow: #eab308;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Inter', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* === HEADER === */
+  .header {
+    background: linear-gradient(135deg, #1e3a5f 0%, #0f172a 50%, #1a1040 100%);
+    border-bottom: 1px solid var(--border);
+    padding: 2rem 2rem 1.5rem;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .header::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle at 30% 50%, rgba(59,130,246,0.08) 0%, transparent 50%),
+                radial-gradient(circle at 70% 50%, rgba(168,85,247,0.06) 0%, transparent 50%);
+    animation: float 20s ease-in-out infinite;
+  }
+  @keyframes float { 0%,100% { transform: translate(0,0); } 50% { transform: translate(-20px, 10px); } }
+  .header h1 { font-size: 2rem; font-weight: 800; position: relative; }
+  .header h1 span { background: linear-gradient(90deg, var(--blue2), var(--purple2), var(--cyan2)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+  .header p { color: var(--text2); margin-top: 0.5rem; position: relative; font-size: 0.95rem; }
+
+  /* === CONTROLS === */
+  .controls {
+    max-width: 900px;
+    margin: 1.5rem auto;
+    padding: 0 1.5rem;
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    align-items: end;
+  }
+  .input-group { flex: 1; min-width: 200px; }
+  .input-group label { display: block; font-size: 0.75rem; color: var(--text2); margin-bottom: 0.3rem; font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em; }
+  .input-group input {
+    width: 100%;
+    padding: 0.6rem 0.8rem;
+    border-radius: 0.5rem;
+    border: 1px solid var(--border);
+    background: var(--bg2);
+    color: var(--text);
+    font-size: 0.9rem;
+    font-family: 'Inter', sans-serif;
+    transition: border-color 0.2s;
+  }
+  .input-group input:focus { outline: none; border-color: var(--blue); box-shadow: 0 0 0 3px rgba(59,130,246,0.15); }
+
+  /* === PIPELINE === */
+  .pipeline {
+    max-width: 900px;
+    margin: 1.5rem auto 0;
+    padding: 0 1.5rem;
+  }
+  .pipeline-track {
+    display: flex;
+    gap: 0;
+    align-items: center;
+    overflow-x: auto;
+    padding: 0.5rem 0;
+  }
+  .step-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.55rem 1rem;
+    border-radius: 0.5rem;
+    border: 1.5px solid var(--border);
+    background: var(--bg2);
+    color: var(--text2);
+    font-size: 0.78rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+    white-space: nowrap;
+    font-family: 'Inter', sans-serif;
+    position: relative;
+  }
+  .step-btn:hover { border-color: var(--blue); color: var(--text); }
+  .step-btn.active { border-color: var(--blue); background: rgba(59,130,246,0.12); color: var(--blue2); box-shadow: 0 0 15px rgba(59,130,246,0.1); }
+  .step-btn.done { border-color: var(--green); color: var(--green2); }
+  .step-btn.running { border-color: var(--orange); color: var(--orange2); animation: pulse 1.5s infinite; }
+  @keyframes pulse { 0%,100% { box-shadow: 0 0 0 0 rgba(249,115,22,0.3); } 50% { box-shadow: 0 0 15px 3px rgba(249,115,22,0.15); } }
+  .step-num { width: 22px; height: 22px; border-radius: 50%; background: var(--bg3); display: flex; align-items: center; justify-content: center; font-size: 0.7rem; font-weight: 700; }
+  .step-btn.done .step-num { background: var(--green); color: #fff; }
+  .step-btn.running .step-num { background: var(--orange); color: #fff; }
+  .step-arrow { color: var(--border); font-size: 1.2rem; margin: 0 0.2rem; flex-shrink: 0; }
+  .step-arrow.done { color: var(--green); }
+
+  .run-all-btn {
+    margin-top: 1rem;
+    padding: 0.7rem 2rem;
+    border-radius: 0.6rem;
+    border: none;
+    background: linear-gradient(135deg, var(--blue), var(--purple));
+    color: #fff;
+    font-size: 0.9rem;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+    transition: all 0.2s;
+    display: block;
+    width: 100%;
+  }
+  .run-all-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(59,130,246,0.3); }
+  .run-all-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+  /* === RESULT PANELS === */
+  .results {
+    max-width: 900px;
+    margin: 1.5rem auto;
+    padding: 0 1.5rem 3rem;
+  }
+
+  .result-card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 0.75rem;
+    margin-bottom: 1.5rem;
+    overflow: hidden;
+    animation: slideIn 0.4s ease;
+  }
+  @keyframes slideIn { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+
+  .result-header {
+    padding: 1rem 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    border-bottom: 1px solid rgba(71,85,105,0.5);
+  }
+  .result-icon {
+    width: 40px; height: 40px;
+    border-radius: 0.5rem;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.2rem;
+    flex-shrink: 0;
+  }
+  .result-header h3 { font-size: 0.95rem; font-weight: 700; }
+  .result-header .time-badge {
+    margin-left: auto;
+    padding: 0.2rem 0.6rem;
+    border-radius: 2rem;
+    background: rgba(34,197,94,0.15);
+    color: var(--green2);
+    font-size: 0.72rem;
+    font-weight: 600;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .result-body { padding: 1.25rem; }
+
+  /* teach block */
+  .teach {
+    background: rgba(59,130,246,0.08);
+    border-left: 3px solid var(--blue);
+    border-radius: 0 0.5rem 0.5rem 0;
+    padding: 0.8rem 1rem;
+    margin-bottom: 1rem;
+    font-size: 0.82rem;
+    color: var(--text2);
+    line-height: 1.6;
+  }
+  .teach strong { color: var(--blue2); }
+
+  /* data grid */
+  .data-row {
+    display: flex;
+    padding: 0.4rem 0;
+    border-bottom: 1px solid rgba(71,85,105,0.3);
+    font-size: 0.82rem;
+    align-items: baseline;
+  }
+  .data-row:last-child { border-bottom: none; }
+  .data-label { color: var(--text2); width: 160px; flex-shrink: 0; font-weight: 500; }
+  .data-value { color: var(--text); flex: 1; word-break: break-word; }
+  .data-value.mono { font-family: 'JetBrains Mono', monospace; font-size: 0.78rem; }
+
+  /* message bubbles */
+  .msg-bubble {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+    align-items: flex-start;
+  }
+  .msg-role {
+    font-size: 0.65rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    padding: 0.15rem 0.4rem;
+    border-radius: 0.25rem;
+    flex-shrink: 0;
+    margin-top: 0.2rem;
+    letter-spacing: 0.04em;
+  }
+  .msg-role.system { background: rgba(168,85,247,0.2); color: var(--purple2); }
+  .msg-role.human { background: rgba(59,130,246,0.2); color: var(--blue2); }
+  .msg-role.ai { background: rgba(34,197,94,0.2); color: var(--green2); }
+  .msg-text { font-size: 0.8rem; line-height: 1.5; color: var(--text); }
+
+  /* graph viz */
+  .graph-flow {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    flex-wrap: wrap;
+    margin: 0.75rem 0;
+  }
+  .graph-node {
+    padding: 0.45rem 0.85rem;
+    border-radius: 0.4rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    border: 1.5px solid;
+  }
+  .graph-node.n1 { border-color: var(--blue); color: var(--blue2); background: rgba(59,130,246,0.1); }
+  .graph-node.n2 { border-color: var(--purple); color: var(--purple2); background: rgba(168,85,247,0.1); }
+  .graph-node.n3 { border-color: var(--orange); color: var(--orange2); background: rgba(249,115,22,0.1); }
+  .graph-node.end { border-color: var(--green); color: var(--green2); background: rgba(34,197,94,0.1); }
+  .graph-arrow { color: var(--text2); font-size: 1rem; }
+
+  /* json tree */
+  .json-block {
+    background: rgba(0,0,0,0.25);
+    border: 1px solid rgba(71,85,105,0.4);
+    border-radius: 0.5rem;
+    padding: 0.8rem;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.75rem;
+    line-height: 1.6;
+    overflow-x: auto;
+    color: var(--text);
+    max-height: 280px;
+    overflow-y: auto;
+    white-space: pre-wrap;
+    word-break: break-word;
+  }
+  .json-key { color: var(--cyan2); }
+  .json-str { color: var(--green2); }
+  .json-num { color: var(--orange2); }
+  .json-bool { color: var(--purple2); }
+
+  /* comparison panels */
+  .compare-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+    margin-top: 0.75rem;
+  }
+  .compare-panel {
+    padding: 0.8rem;
+    border-radius: 0.5rem;
+    border: 1px solid;
+    font-size: 0.8rem;
+    line-height: 1.6;
+  }
+  .compare-panel.without { border-color: rgba(239,68,68,0.4); background: rgba(239,68,68,0.05); }
+  .compare-panel.with { border-color: rgba(34,197,94,0.4); background: rgba(34,197,94,0.05); }
+  .compare-panel h4 { font-size: 0.75rem; font-weight: 700; margin-bottom: 0.4rem; text-transform: uppercase; letter-spacing: 0.05em; }
+  .compare-panel.without h4 { color: var(--red); }
+  .compare-panel.with h4 { color: var(--green2); }
+
+  /* tags */
+  .tag-list { display: flex; flex-wrap: wrap; gap: 0.35rem; }
+  .tag {
+    padding: 0.2rem 0.6rem;
+    border-radius: 2rem;
+    font-size: 0.72rem;
+    font-weight: 600;
+  }
+  .tag.condition { background: rgba(239,68,68,0.15); color: #fca5a5; }
+  .tag.specialist { background: rgba(59,130,246,0.15); color: var(--blue2); }
+  .tag.test { background: rgba(168,85,247,0.15); color: var(--purple2); }
+  .tag.risk-low { background: rgba(34,197,94,0.15); color: var(--green2); }
+  .tag.risk-moderate { background: rgba(234,179,8,0.15); color: #fde047; }
+  .tag.risk-high { background: rgba(239,68,68,0.2); color: #fca5a5; }
+
+  /* hospital/medicine cards */
+  .rec-card {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 0.6rem;
+    background: rgba(0,0,0,0.15);
+    border-radius: 0.4rem;
+    margin-bottom: 0.35rem;
+    font-size: 0.8rem;
+  }
+  .rec-card a { color: var(--cyan2); text-decoration: none; font-size: 0.7rem; }
+
+  /* loading spinner */
+  .spinner {
+    display: inline-block;
+    width: 16px; height: 16px;
+    border: 2px solid rgba(255,255,255,0.2);
+    border-top-color: var(--blue2);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    margin-right: 0.5rem;
+    vertical-align: middle;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* log console */
+  .log-console {
+    background: #000;
+    border: 1px solid var(--border);
+    border-radius: 0.5rem;
+    padding: 0.75rem;
+    margin-bottom: 1rem;
+    max-height: 200px;
+    overflow-y: auto;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.72rem;
+    line-height: 1.8;
+  }
+  .log-line { opacity: 0; animation: logFadeIn 0.3s ease forwards; }
+  @keyframes logFadeIn { to { opacity: 1; } }
+  .log-line .time { color: #6b7280; }
+  .log-line .call { color: var(--blue2); }
+  .log-line .ok { color: var(--green2); }
+  .log-line .info { color: var(--yellow); }
+  .log-line .data { color: var(--cyan2); }
+  .log-line .err { color: var(--red); }
+
+  @media (max-width: 640px) {
+    .controls { flex-direction: column; }
+    .compare-grid { grid-template-columns: 1fr; }
+    .pipeline-track { flex-wrap: wrap; }
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>🧠 <span>MedAI Learning Lab</span></h1>
+  <p>Interactive step-by-step guide: watch how LLM, LangChain, LangGraph & RAG work in real-time</p>
+</div>
+
+<div class="controls">
+  <div class="input-group" style="flex:2;">
+    <label>💬 Symptoms / Question</label>
+    <input type="text" id="inputMessage" value="I have a headache and fever for 3 days" />
+  </div>
+  <div class="input-group">
+    <label>📍 Location</label>
+    <input type="text" id="inputLocation" value="Hyderabad" />
+  </div>
+</div>
+
+<div class="pipeline">
+  <div class="pipeline-track" id="pipelineTrack">
+    <button class="step-btn" data-step="1" onclick="runStep(1)"><span class="step-num">1</span>LLM</button>
+    <span class="step-arrow">→</span>
+    <button class="step-btn" data-step="2" onclick="runStep(2)"><span class="step-num">2</span>LangChain</button>
+    <span class="step-arrow">→</span>
+    <button class="step-btn" data-step="3" onclick="runStep(3)"><span class="step-num">3</span>JSON Output</button>
+    <span class="step-arrow">→</span>
+    <button class="step-btn" data-step="4" onclick="runStep(4)"><span class="step-num">4</span>RAG</button>
+    <span class="step-arrow">→</span>
+    <button class="step-btn" data-step="5" onclick="runStep(5)"><span class="step-num">5</span>RAG + LLM</button>
+    <span class="step-arrow">→</span>
+    <button class="step-btn" data-step="6" onclick="runStep(6)"><span class="step-num">6</span>LangGraph</button>
+  </div>
+  <button class="run-all-btn" id="runAllBtn" onclick="runAll()">▶ Run All Steps (watch the full pipeline)</button>
+</div>
+
+<div class="results" id="results">
+  <div class="log-console" id="logConsole">
+    <div class="log-line"><span class="info">Ready. Click a step above or "Run All" to begin.</span></div>
+  </div>
+</div>
+
+<script>
+const API = 'http://localhost:8000';
+const endpoints = {
+  1: '/api/learn/step1-llm',
+  2: '/api/learn/step2-langchain',
+  3: '/api/learn/step3-structured',
+  4: '/api/learn/step4-rag',
+  5: '/api/learn/step5-rag-llm',
+  6: '/api/learn/step6-langgraph',
+};
+const stepColors = { 1: '#3b82f6', 2: '#a855f7', 3: '#f97316', 4: '#06b6d4', 5: '#22c55e', 6: '#eab308' };
+const stepIcons = { 1: '🤖', 2: '💬', 3: '📋', 4: '🔍', 5: '🎯', 6: '🔀' };
+let isRunning = false;
+
+function getBody() {
+  return { message: document.getElementById('inputMessage').value, location: document.getElementById('inputLocation').value };
+}
+
+function log(html) {
+  const c = document.getElementById('logConsole');
+  const t = new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  c.innerHTML += `<div class="log-line"><span class="time">[${t}]</span> ${html}</div>`;
+  c.scrollTop = c.scrollHeight;
+}
+
+function setStepState(n, state) {
+  const btn = document.querySelector(`.step-btn[data-step="${n}"]`);
+  if (btn) { btn.className = `step-btn ${state}`; }
+  // arrow before this step
+  const arrows = document.querySelectorAll('.step-arrow');
+  if (n > 1 && state === 'done' && arrows[n-2]) arrows[n-2].className = 'step-arrow done';
+}
+
+function colorJson(obj, indent) {
+  indent = indent || 0;
+  const pad = '  '.repeat(indent);
+  if (obj === null) return `<span class="json-bool">null</span>`;
+  if (typeof obj === 'boolean') return `<span class="json-bool">${obj}</span>`;
+  if (typeof obj === 'number') return `<span class="json-num">${obj}</span>`;
+  if (typeof obj === 'string') return `<span class="json-str">"${obj.replace(/</g,'&lt;').replace(/"/g, '\\"')}"</span>`;
+  if (Array.isArray(obj)) {
+    if (obj.length === 0) return '[]';
+    const items = obj.map(v => `${pad}  ${colorJson(v, indent+1)}`).join(',\n');
+    return `[\n${items}\n${pad}]`;
+  }
+  const keys = Object.keys(obj);
+  if (keys.length === 0) return '{}';
+  const items = keys.map(k => `${pad}  <span class="json-key">"${k}"</span>: ${colorJson(obj[k], indent+1)}`).join(',\n');
+  return `{\n${items}\n${pad}}`;
+}
+
+function riskClass(level) {
+  if (!level) return 'risk-moderate';
+  const l = level.toLowerCase();
+  if (l.includes('high') || l.includes('critical')) return 'risk-high';
+  if (l.includes('low')) return 'risk-low';
+  return 'risk-moderate';
+}
+
+// ── RENDERERS ──
+
+function renderStep1(d) {
+  return `
+    <div class="teach">
+      <strong>What happened:</strong> Your message was sent directly to GPT-4o-mini via LangChain's <strong>ChatOpenAI</strong>.
+      No RAG, no graph — just a single <strong>HumanMessage</strong> → LLM → response.
+      This is the foundation of everything.<br/>
+      📁 <strong>Code:</strong> <code>server/medical_agent.py</code> → <code>ChatOpenAI(model="gpt-4o-mini", temperature=0.3)</code>
+    </div>
+    <div class="data-row"><span class="data-label">📥 Input</span><span class="data-value">${d.input}</span></div>
+    <div class="data-row"><span class="data-label">🤖 Model</span><span class="data-value mono">${d.model}</span></div>
+    <div class="data-row"><span class="data-label">📊 Tokens</span><span class="data-value mono">${d.prompt_tokens} prompt + ${d.completion_tokens} completion = ${d.total_tokens} total</span></div>
+    <div class="data-row"><span class="data-label">📤 LLM Response</span><span class="data-value">${d.output}</span></div>
+  `;
+}
+
+function renderStep2(d) {
+  function renderMsgs(msgs) {
+    return msgs.map(m => `<div class="msg-bubble"><span class="msg-role ${m.role}">${m.role}</span><span class="msg-text">${m.content.substring(0,200)}${m.content.length > 200 ? '…' : ''}</span></div>`).join('');
+  }
+  return `
+    <div class="teach">
+      <strong>What happened:</strong> LangChain structures conversations with 3 message types:<br/>
+      • <strong>SystemMessage</strong> — sets the AI's role/personality (invisible to user)<br/>
+      • <strong>HumanMessage</strong> — your input<br/>
+      • <strong>AIMessage</strong> — the AI's previous reply (for context)<br/>
+      Round 2 includes Round 1's history, so the AI <strong>remembers</strong> the earlier conversation.<br/>
+      📁 <strong>Code:</strong> <code>medical_agent.py → _generate_reply_node()</code>
+    </div>
+    <h4 style="font-size:0.8rem;color:var(--blue2);margin-bottom:0.5rem;">Round 1 — Single question (no history)</h4>
+    ${renderMsgs(d.messages_round1)}
+    <div style="background:rgba(34,197,94,0.08);border-radius:0.4rem;padding:0.6rem;margin:0.5rem 0;font-size:0.82rem;">
+      <strong style="color:var(--green2);">AI Reply (${d.time_round1}s):</strong> ${d.reply_round1}
+    </div>
+    <h4 style="font-size:0.8rem;color:var(--purple2);margin:1rem 0 0.5rem;">Round 2 — With conversation history (AI remembers!)</h4>
+    ${renderMsgs(d.messages_round2)}
+    <div style="background:rgba(34,197,94,0.08);border-radius:0.4rem;padding:0.6rem;margin:0.5rem 0;font-size:0.82rem;">
+      <strong style="color:var(--green2);">AI Reply (${d.time_round2}s):</strong> ${d.reply_round2}
+    </div>
+  `;
+}
+
+function renderStep3(d) {
+  return `
+    <div class="teach">
+      <strong>What happened:</strong> The system prompt tells the LLM to respond with <strong>ONLY valid JSON</strong>.
+      We use <strong>temperature=0.1</strong> (very low) so the output is precise and parseable.<br/>
+      This is how the AI Doctor generates structured conditions, specialists, risk levels, and tests.<br/>
+      📁 <strong>Code:</strong> <code>medical_agent.py → ANALYSIS_SYSTEM_PROMPT + analysis_llm</code>
+    </div>
+    <div class="data-row"><span class="data-label">Strategy</span><span class="data-value">${d.prompt_strategy}</span></div>
+    <div style="margin-top:0.75rem;">
+      <div style="font-size:0.75rem;font-weight:600;color:var(--text2);margin-bottom:0.4rem;">PARSED JSON OUTPUT:</div>
+      <div class="json-block">${colorJson(d.output)}</div>
+    </div>
+    ${d.output.conditions ? `<div style="margin-top:0.75rem;">
+      <div style="font-size:0.75rem;font-weight:600;color:var(--text2);margin-bottom:0.4rem;">VISUAL BREAKDOWN:</div>
+      <div class="data-row"><span class="data-label">🦠 Conditions</span><span class="data-value"><span class="tag-list">${d.output.conditions.map(c=>`<span class="tag condition">${c}</span>`).join('')}</span></span></div>
+      <div class="data-row"><span class="data-label">👨‍⚕ Specialists</span><span class="data-value"><span class="tag-list">${d.output.specialists.map(s=>`<span class="tag specialist">${s}</span>`).join('')}</span></span></div>
+      <div class="data-row"><span class="data-label">⚠️ Risk Level</span><span class="data-value"><span class="tag ${riskClass(d.output.riskLevel)}">${d.output.riskLevel}</span></span></div>
+      <div class="data-row"><span class="data-label">🧪 Tests</span><span class="data-value"><span class="tag-list">${d.output.tests.map(t=>`<span class="tag test">${t}</span>`).join('')}</span></span></div>
+    </div>` : ''}
+  `;
+}
+
+function renderStep4(d) {
+  return `
+    <div class="teach">
+      <strong>What happened:</strong> RAG pipeline in action!<br/>
+      1️⃣ The medical report was <strong>split into ${d.num_chunks} chunks</strong> (1000 chars each)<br/>
+      2️⃣ Each chunk was converted to a <strong>${d.embedding_dimensions}-dimension vector</strong> using OpenAI Embeddings<br/>
+      3️⃣ Vectors were stored in a <strong>FAISS index</strong> (${d.vectors_in_index} vectors)<br/>
+      4️⃣ When you ask a question, FAISS finds the <strong>most similar chunk</strong> instantly<br/>
+      📁 <strong>Code:</strong> <code>rag_engine.py → ingest_pdf() + query()</code>
+    </div>
+    <div style="font-size:0.75rem;font-weight:600;color:var(--text2);margin-bottom:0.4rem;">CHUNKS CREATED:</div>
+    ${d.chunks.map(c => `<div class="rec-card">📄 <strong>Chunk ${c.id}</strong> (${c.length} chars): <span style="color:var(--text2)">${c.text}</span></div>`).join('')}
+    <div style="margin-top:0.75rem;">
+      <div class="data-row"><span class="data-label">Embedding dims</span><span class="data-value mono">${d.embedding_dimensions} (each chunk becomes a list of ${d.embedding_dimensions} numbers)</span></div>
+      <div class="data-row"><span class="data-label">Sample vector</span><span class="data-value mono">[${d.embedding_sample.join(', ')}, ...]</span></div>
+    </div>
+    <div style="margin-top:0.75rem;font-size:0.75rem;font-weight:600;color:var(--text2);margin-bottom:0.4rem;">🔍 SIMILARITY SEARCH RESULTS:</div>
+    ${d.search_results.map(s => `
+      <div style="margin-bottom:0.6rem;">
+        <div style="font-size:0.8rem;color:var(--cyan2);font-weight:600;">Q: "${s.query}"</div>
+        ${s.matches.map((m,i) => `<div class="rec-card" style="margin-left:1rem;">Match ${i+1}: ${m.text}</div>`).join('')}
+      </div>
+    `).join('')}
+    <div class="data-row"><span class="data-label">⏱ Timing</span><span class="data-value mono">Chunk: ${d.timing.chunking_ms}ms | Embed: ${d.timing.embedding_ms}ms | Index: ${d.timing.indexing_ms}ms | Search: ${d.timing.search_ms}ms</span></div>
+  `;
+}
+
+function renderStep5(d) {
+  return `
+    <div class="teach">
+      <strong>What happened:</strong> Same question, same LLM — but look at the difference!<br/>
+      <strong>Without RAG:</strong> Generic medical advice (could apply to anyone)<br/>
+      <strong>With RAG:</strong> Personalized answer using YOUR specific lab values (HbA1c, blood sugar, etc.)<br/>
+      This is the #1 reason we use RAG: <strong>personalized medical answers</strong>.<br/>
+      📁 <strong>Code:</strong> <code>main.py → chat() → "if rag.has_documents(): rag.query()"</code>
+    </div>
+    <div class="data-row"><span class="data-label">Question</span><span class="data-value">${d.question}</span></div>
+    <div class="data-row"><span class="data-label">RAG Context</span><span class="data-value" style="font-size:0.75rem;color:var(--cyan2);">${d.rag_context}</span></div>
+    <div class="compare-grid">
+      <div class="compare-panel without">
+        <h4>❌ Without RAG (${d.without_rag.time}s)</h4>
+        ${d.without_rag.reply}
+      </div>
+      <div class="compare-panel with">
+        <h4>✅ With RAG (${d.with_rag.time}s)</h4>
+        ${d.with_rag.reply}
+      </div>
+    </div>
+  `;
+}
+
+function renderStep6(d) {
+  const a = d.analysis || {};
+  return `
+    <div class="teach">
+      <strong>What happened:</strong> LangGraph ran <strong>3 LLM calls in sequence</strong>, each building on the previous:<br/>
+      <strong>Node 1 (Reply):</strong> Friendly medical response using conversation history + RAG context<br/>
+      <strong>Node 2 (Analysis):</strong> Structured JSON with conditions, specialists, risk, tests<br/>
+      <strong>Node 3 (Enrichment):</strong> Adds hospitals near "${d.location}" + medicines with buy links<br/>
+      All 3 nodes share the same <strong>AgentState</strong> object (shared memory).<br/>
+      📁 <strong>Code:</strong> <code>medical_agent.py → _build_graph() + run()</code>
+    </div>
+    <div style="font-size:0.75rem;font-weight:600;color:var(--text2);margin-bottom:0.4rem;">LANGGRAPH FLOW:</div>
+    <div class="graph-flow">
+      <div class="graph-node n1">🗣️ Node 1: Reply<br/><small>temp=0.3</small></div>
+      <span class="graph-arrow">→</span>
+      <div class="graph-node n2">📋 Node 2: Analysis<br/><small>temp=0.1</small></div>
+      <span class="graph-arrow">→</span>
+      <div class="graph-node n3">🏥 Node 3: Enrich<br/><small>temp=0.2</small></div>
+      <span class="graph-arrow">→</span>
+      <div class="graph-node end">✅ END</div>
+    </div>
+    <div style="font-size:0.75rem;font-weight:600;color:var(--blue2);margin:1rem 0 0.4rem;">NODE 1 → Reply:</div>
+    <div style="background:rgba(59,130,246,0.08);border-radius:0.4rem;padding:0.6rem;font-size:0.82rem;margin-bottom:0.75rem;">${d.reply}</div>
+    ${a.conditions ? `
+      <div style="font-size:0.75rem;font-weight:600;color:var(--purple2);margin-bottom:0.4rem;">NODE 2 → Analysis:</div>
+      <div class="data-row"><span class="data-label">Conditions</span><span class="data-value"><span class="tag-list">${a.conditions.map(c=>`<span class="tag condition">${c}</span>`).join('')}</span></span></div>
+      <div class="data-row"><span class="data-label">Specialists</span><span class="data-value"><span class="tag-list">${(a.specialists||[]).map(s=>`<span class="tag specialist">${s}</span>`).join('')}</span></span></div>
+      <div class="data-row"><span class="data-label">Risk Level</span><span class="data-value"><span class="tag ${riskClass(a.riskLevel)}">${a.riskLevel}</span></span></div>
+      <div class="data-row"><span class="data-label">Tests</span><span class="data-value"><span class="tag-list">${(a.tests||[]).map(t=>`<span class="tag test">${t}</span>`).join('')}</span></span></div>
+    ` : ''}
+    ${a.hospitals ? `
+      <div style="font-size:0.75rem;font-weight:600;color:var(--orange2);margin:0.75rem 0 0.4rem;">NODE 3 → Hospitals near ${d.location}:</div>
+      ${a.hospitals.map(h => `<div class="rec-card">🏥 <strong>${h.name}</strong> <a href="${h.mapLink}" target="_blank">📍 Map</a></div>`).join('')}
+    ` : ''}
+    ${a.medicines ? `
+      <div style="font-size:0.75rem;font-weight:600;color:var(--green2);margin:0.75rem 0 0.4rem;">NODE 3 → Medicines:</div>
+      ${a.medicines.map(m => `<div class="rec-card">💊 <strong>${m.name}</strong> — ${m.dosage||''} <a href="${m.buyLink}" target="_blank">🛒 Buy</a></div>`).join('')}
+    ` : ''}
+  `;
+}
+
+const renderers = { 1: renderStep1, 2: renderStep2, 3: renderStep3, 4: renderStep4, 5: renderStep5, 6: renderStep6 };
+const stepNames = { 1: 'Raw LLM Call', 2: 'LangChain Messages', 3: 'Structured JSON', 4: 'RAG Pipeline', 5: 'RAG + LLM Comparison', 6: 'LangGraph 3-Node Workflow' };
+
+async function runStep(n) {
+  const btn = document.querySelector(`.step-btn[data-step="${n}"]`);
+  if (btn.classList.contains('running')) return;
+
+  setStepState(n, 'running');
+  log(`<span class="call">▶ STEP ${n}: ${stepNames[n]}</span> — calling backend...`);
+
+  const body = getBody();
+  try {
+    const t0 = performance.now();
+    const res = await fetch(API + endpoints[n], {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    const elapsed = ((performance.now() - t0) / 1000).toFixed(2);
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ detail: 'Server error' }));
+      throw new Error(err.detail || `HTTP ${res.status}`);
+    }
+
+    const data = await res.json();
+    setStepState(n, 'done');
+    log(`<span class="ok">✓ STEP ${n} complete</span> <span class="data">(${elapsed}s)</span>`);
+
+    // Log key details
+    if (data.model) log(`  <span class="data">Model: ${data.model} | Tokens: ${data.total_tokens}</span>`);
+    if (data.num_chunks) log(`  <span class="data">Chunks: ${data.num_chunks} | Vectors: ${data.vectors_in_index} | Dims: ${data.embedding_dimensions}</span>`);
+    if (data.analysis?.riskLevel) log(`  <span class="info">Risk: ${data.analysis.riskLevel} | Conditions: ${(data.analysis.conditions||[]).join(', ')}</span>`);
+    if (data.analysis?.hospitals) log(`  <span class="data">Hospitals: ${data.analysis.hospitals.map(h=>h.name).join(', ')}</span>`);
+
+    // Render result card
+    const html = renderers[n](data);
+    const card = document.createElement('div');
+    card.className = 'result-card';
+    card.innerHTML = `
+      <div class="result-header">
+        <div class="result-icon" style="background:${stepColors[n]}22;color:${stepColors[n]};">${stepIcons[n]}</div>
+        <h3>Step ${n}: ${stepNames[n]}</h3>
+        <span class="time-badge">${elapsed}s</span>
+      </div>
+      <div class="result-body">${html}</div>
+    `;
+    // Insert before log console
+    const results = document.getElementById('results');
+    results.appendChild(card);
+
+    return data;
+  } catch (e) {
+    setStepState(n, '');
+    log(`<span class="err">✗ STEP ${n} failed: ${e.message}</span>`);
+    return null;
+  }
+}
+
+async function runAll() {
+  if (isRunning) return;
+  isRunning = true;
+  const btn = document.getElementById('runAllBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span>Running full pipeline...';
+
+  // Clear previous results (keep log)
+  document.querySelectorAll('.result-card').forEach(c => c.remove());
+  document.querySelectorAll('.step-btn').forEach(b => b.className = 'step-btn');
+  document.querySelectorAll('.step-arrow').forEach(a => a.className = 'step-arrow');
+  document.getElementById('logConsole').innerHTML = '';
+  log(`<span class="info">🚀 Starting full pipeline — 6 steps</span>`);
+
+  for (let i = 1; i <= 6; i++) {
+    await runStep(i);
+    if (i < 6) await new Promise(r => setTimeout(r, 300));
+  }
+
+  log(`<span class="ok">🎉 All steps complete! You just saw the entire MedAI AI pipeline.</span>`);
+  btn.disabled = false;
+  btn.innerHTML = '▶ Run All Steps Again';
+  isRunning = false;
+}
+</script>
+
+</body>
+</html>

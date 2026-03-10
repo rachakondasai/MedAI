@@ -464,6 +464,253 @@ async def admin_update_role(user_id: str, admin: dict = Depends(auth.require_adm
     return {"message": f"User role changed to '{new_role}'.", "role": new_role}
 
 
+# =====================================================
+# LEARNING / TEST ENDPOINTS — Step-by-step AI pipeline
+# =====================================================
+
+from fastapi.responses import HTMLResponse
+from pathlib import Path
+
+class LearnRequest(BaseModel):
+    message: str = "I have a headache and fever for 3 days"
+    location: str = "Hyderabad"
+    report_text: str = ""
+
+
+@app.post("/api/learn/step1-llm")
+async def learn_step1_llm(req: LearnRequest):
+    """STEP 1: Raw LLM call — just send a message and get a response."""
+    key = get_api_key()
+    from langchain_openai import ChatOpenAI
+    from langchain_core.messages import HumanMessage
+    t0 = time.time()
+    llm = ChatOpenAI(openai_api_key=key, model="gpt-4o-mini", temperature=0.3, max_tokens=500)
+    response = await llm.ainvoke([HumanMessage(content=req.message)])
+    elapsed = round(time.time() - t0, 2)
+    meta = response.response_metadata or {}
+    usage = meta.get("token_usage", {})
+    return {
+        "step": "1_llm",
+        "title": "Raw LLM Call (GPT-4o-mini)",
+        "input": req.message,
+        "output": response.content,
+        "model": meta.get("model_name", "gpt-4o-mini"),
+        "prompt_tokens": usage.get("prompt_tokens"),
+        "completion_tokens": usage.get("completion_tokens"),
+        "total_tokens": usage.get("total_tokens"),
+        "time_seconds": elapsed,
+    }
+
+
+@app.post("/api/learn/step2-langchain")
+async def learn_step2_langchain(req: LearnRequest):
+    """STEP 2: LangChain messages — System + Human + AI conversation."""
+    key = get_api_key()
+    from langchain_openai import ChatOpenAI
+    from langchain_core.messages import HumanMessage, SystemMessage, AIMessage
+    llm = ChatOpenAI(openai_api_key=key, model="gpt-4o-mini", temperature=0.3, max_tokens=400)
+
+    # Round 1: single message
+    t0 = time.time()
+    r1 = await llm.ainvoke([
+        SystemMessage(content="You are a medical AI. Be concise (2-3 sentences)."),
+        HumanMessage(content=req.message),
+    ])
+    t1 = time.time()
+
+    # Round 2: with history
+    r2 = await llm.ainvoke([
+        SystemMessage(content="You are a medical AI. Be concise (2-3 sentences)."),
+        HumanMessage(content=req.message),
+        AIMessage(content=r1.content),
+        HumanMessage(content="What specialist should I see for this?"),
+    ])
+    t2 = time.time()
+
+    return {
+        "step": "2_langchain",
+        "title": "LangChain Conversation Messages",
+        "messages_round1": [
+            {"role": "system", "content": "You are a medical AI. Be concise (2-3 sentences)."},
+            {"role": "human", "content": req.message},
+        ],
+        "reply_round1": r1.content,
+        "time_round1": round(t1 - t0, 2),
+        "messages_round2": [
+            {"role": "system", "content": "You are a medical AI. Be concise."},
+            {"role": "human", "content": req.message},
+            {"role": "ai", "content": r1.content},
+            {"role": "human", "content": "What specialist should I see for this?"},
+        ],
+        "reply_round2": r2.content,
+        "time_round2": round(t2 - t1, 2),
+    }
+
+
+@app.post("/api/learn/step3-structured")
+async def learn_step3_structured(req: LearnRequest):
+    """STEP 3: Structured JSON output using system prompts."""
+    key = get_api_key()
+    agent = get_agent(key)
+    t0 = time.time()
+    analysis = await agent.analyze_symptoms(req.message)
+    elapsed = round(time.time() - t0, 2)
+    return {
+        "step": "3_structured",
+        "title": "Structured JSON Analysis (temperature=0.1)",
+        "input": req.message,
+        "prompt_strategy": "System prompt forces JSON schema. temperature=0.1 for deterministic output.",
+        "output": analysis,
+        "time_seconds": elapsed,
+    }
+
+
+@app.post("/api/learn/step4-rag")
+async def learn_step4_rag(req: LearnRequest):
+    """STEP 4: RAG — Embed text, build FAISS index, search."""
+    key = get_api_key()
+    from langchain_openai import OpenAIEmbeddings
+    from langchain_community.vectorstores import FAISS
+    from langchain_core.documents import Document
+    from langchain_text_splitters import RecursiveCharacterTextSplitter
+
+    report = req.report_text or """
+Patient: Test User, Age: 28, Date: 2024-03-01
+CBC: Hemoglobin: 14.2 g/dL (Normal), WBC: 11500 /μL (HIGH), Platelets: 250000 /μL (Normal)
+Liver: ALT: 45 U/L (Normal), AST: 38 U/L (Normal), Bilirubin: 0.9 mg/dL (Normal)
+Lipid: Total Cholesterol: 220 mg/dL (HIGH), LDL: 140 mg/dL (HIGH), HDL: 45 mg/dL (Normal), Triglycerides: 175 (HIGH)
+Blood Sugar: Fasting: 112 mg/dL (PRE-DIABETIC), HbA1c: 6.2% (PRE-DIABETIC)
+"""
+
+    t0 = time.time()
+    splitter = RecursiveCharacterTextSplitter(chunk_size=300, chunk_overlap=50)
+    docs = [Document(page_content=report.strip(), metadata={"source": "blood_report.pdf", "page": 1})]
+    chunks = splitter.split_documents(docs)
+    chunk_texts = [{"id": i + 1, "text": c.page_content[:150] + "...", "length": len(c.page_content)} for i, c in enumerate(chunks)]
+    t1 = time.time()
+
+    embeddings = OpenAIEmbeddings(openai_api_key=key, model="text-embedding-3-small")
+    sample_vec = embeddings.embed_query(req.message)
+    t2 = time.time()
+
+    vectorstore = FAISS.from_documents(chunks, embeddings)
+    t3 = time.time()
+
+    queries = [req.message, "Is cholesterol normal?", "Am I diabetic?"]
+    search_results = []
+    for q in queries:
+        results = vectorstore.similarity_search(q, k=2)
+        search_results.append({
+            "query": q,
+            "matches": [{"text": r.page_content[:120] + "...", "source": r.metadata.get("source", "")} for r in results],
+        })
+    t4 = time.time()
+
+    return {
+        "step": "4_rag",
+        "title": "RAG — Chunking, Embedding, FAISS Search",
+        "report_length": len(report),
+        "chunks": chunk_texts,
+        "num_chunks": len(chunks),
+        "embedding_dimensions": len(sample_vec),
+        "embedding_sample": [round(v, 4) for v in sample_vec[:8]],
+        "vectors_in_index": vectorstore.index.ntotal,
+        "search_results": search_results,
+        "timing": {
+            "chunking_ms": round((t1 - t0) * 1000),
+            "embedding_ms": round((t2 - t1) * 1000),
+            "indexing_ms": round((t3 - t2) * 1000),
+            "search_ms": round((t4 - t3) * 1000),
+        },
+    }
+
+
+@app.post("/api/learn/step5-rag-llm")
+async def learn_step5_rag_llm(req: LearnRequest):
+    """STEP 5: RAG + LLM — compare generic vs personalized answers."""
+    key = get_api_key()
+    from langchain_openai import ChatOpenAI, OpenAIEmbeddings
+    from langchain_community.vectorstores import FAISS
+    from langchain_core.documents import Document
+    from langchain_core.messages import HumanMessage, SystemMessage
+    from langchain_text_splitters import RecursiveCharacterTextSplitter
+
+    report = req.report_text or "Lipid: Cholesterol: 220 mg/dL (HIGH), LDL: 140 (HIGH). HbA1c: 6.2% (PRE-DIABETIC). Fasting Sugar: 112 mg/dL (HIGH)."
+    question = req.message or "Am I at risk for diabetes?"
+
+    splitter = RecursiveCharacterTextSplitter(chunk_size=500, chunk_overlap=100)
+    docs = [Document(page_content=report, metadata={"source": "report.pdf"})]
+    chunks = splitter.split_documents(docs)
+    embeddings = OpenAIEmbeddings(openai_api_key=key, model="text-embedding-3-small")
+    vs = FAISS.from_documents(chunks, embeddings)
+    rag_results = vs.similarity_search(question, k=2)
+    rag_context = "\n".join([d.page_content for d in rag_results])
+
+    llm = ChatOpenAI(openai_api_key=key, model="gpt-4o-mini", temperature=0.3, max_tokens=300)
+
+    t0 = time.time()
+    r_without = await llm.ainvoke([
+        SystemMessage(content="You are a medical AI. Be concise (3-4 sentences)."),
+        HumanMessage(content=question),
+    ])
+    t1 = time.time()
+    r_with = await llm.ainvoke([
+        SystemMessage(content="You are a medical AI. Use the patient's report. Be concise (3-4 sentences)."),
+        HumanMessage(content=f"Question: {question}\n\nPatient report:\n{rag_context}"),
+    ])
+    t2 = time.time()
+
+    return {
+        "step": "5_rag_llm",
+        "title": "RAG + LLM — Generic vs Personalized",
+        "question": question,
+        "rag_context": rag_context[:300],
+        "without_rag": {"reply": r_without.content, "time": round(t1 - t0, 2)},
+        "with_rag": {"reply": r_with.content, "time": round(t2 - t1, 2)},
+    }
+
+
+@app.post("/api/learn/step6-langgraph")
+async def learn_step6_langgraph(req: LearnRequest):
+    """STEP 6: Full LangGraph — 3-node agent pipeline."""
+    key = get_api_key()
+    agent = get_agent(key)
+
+    t0 = time.time()
+    result = await agent.run(
+        message=req.message,
+        conversation_history=[],
+        rag_context="",
+        location=req.location or "Hyderabad",
+    )
+    elapsed = round(time.time() - t0, 2)
+
+    return {
+        "step": "6_langgraph",
+        "title": "LangGraph — 3-Node Workflow",
+        "input": req.message,
+        "location": req.location or "Hyderabad",
+        "nodes": [
+            {"name": "generate_reply", "description": "Friendly medical response (temp=0.3)", "output_field": "reply"},
+            {"name": "generate_analysis", "description": "Structured JSON analysis (temp=0.1)", "output_field": "analysis"},
+            {"name": "generate_enrichment", "description": "Hospitals + Medicines (temp=0.2)", "output_field": "analysis.hospitals + analysis.medicines"},
+        ],
+        "flow": "generate_reply → generate_analysis → generate_enrichment → END",
+        "reply": result["reply"][:600],
+        "analysis": result.get("analysis"),
+        "time_seconds": elapsed,
+    }
+
+
+@app.get("/learn", response_class=HTMLResponse)
+async def learn_ui():
+    """Serve the interactive learning UI."""
+    html_path = Path(__file__).parent.parent / "learn.html"
+    if html_path.exists():
+        return HTMLResponse(content=html_path.read_text(), status_code=200)
+    return HTMLResponse(content="<h1>learn.html not found</h1>", status_code=404)
+
+
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)

@@ -11,6 +11,7 @@ import History from './pages/History'
 import Settings from './pages/Settings'
 import AdminDashboard from './pages/AdminDashboard'
 import Login from './pages/Login'
+import LearningLab from './pages/LearningLab'
 import { isAuthenticated, isAdmin, getStoredUser, type AuthUser } from './lib/auth'
 import { useUserLocation } from './lib/useLocation'
 
@@ -50,6 +51,7 @@ export default function App() {
             <Route path="/medicines" element={<Medicines />} />
             <Route path="/history" element={<History />} />
             <Route path="/settings" element={<Settings />} />
+            <Route path="/learn" element={<LearningLab />} />
             <Route
               path="/admin"
               element={user?.role === 'admin' ? <AdminDashboard /> : <Navigate to="/" replace />}

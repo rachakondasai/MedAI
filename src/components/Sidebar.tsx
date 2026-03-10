@@ -11,6 +11,7 @@ import {
   Heart,
   Shield,
   LogOut,
+  BookOpen,
 } from 'lucide-react'
 import { logout, type AuthUser } from '../lib/auth'
 
@@ -21,6 +22,7 @@ const navItems = [
   { to: '/hospitals', icon: Building2, label: 'Hospitals' },
   { to: '/medicines', icon: Pill, label: 'Medicines' },
   { to: '/history', icon: Clock, label: 'History' },
+  { to: '/learn', icon: BookOpen, label: 'Learning Lab' },
   { to: '/settings', icon: Settings, label: 'Settings' },
 ]
 

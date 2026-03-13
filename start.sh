@@ -51,7 +51,11 @@ echo ""
 echo "🔑 [3/4] Checking environment..."
 if [ ! -f "$SERVER_DIR/.env" ]; then
   cp "$SERVER_DIR/.env.example" "$SERVER_DIR/.env"
-  echo "   → Created server/.env from template."
+  # Generate a stable JWT secret automatically
+  JWT_SECRET=$(python3 -c "import secrets; print(secrets.token_urlsafe(32))" 2>/dev/null || echo "medai-auto-generated-secret-$(date +%s)")
+  sed -i.bak "s|JWT_SECRET=your-jwt-secret-here|JWT_SECRET=${JWT_SECRET}|" "$SERVER_DIR/.env"
+  rm -f "$SERVER_DIR/.env.bak"
+  echo "   → Created server/.env with auto-generated JWT secret."
   echo "   → ⚠️  No OpenAI API key set. Add it via Settings page in the dashboard."
 else
   echo "   → server/.env already exists."

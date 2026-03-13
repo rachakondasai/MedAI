@@ -6,7 +6,6 @@ import hashlib
 import hmac
 import json
 import os
-import uuid
 from datetime import datetime, timezone, timedelta
 from base64 import urlsafe_b64encode, urlsafe_b64decode
 
@@ -16,8 +15,9 @@ from pydantic import BaseModel, EmailStr
 
 import database as db
 
-# Secret key for JWT signing — in production, use a proper secret
-JWT_SECRET = os.getenv("JWT_SECRET", "medai-secret-key-change-in-production-" + str(uuid.uuid4()))
+# Secret key for JWT signing — MUST be stable across restarts.
+# Set JWT_SECRET in your .env file for production use.
+JWT_SECRET = os.getenv("JWT_SECRET", "medai-default-dev-secret-key-change-in-production")
 JWT_ALGORITHM = "HS256"
 TOKEN_EXPIRY_HOURS = 72
 

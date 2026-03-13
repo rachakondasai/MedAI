@@ -1,0 +1,42 @@
+# ── Dependencies & build artifacts ──
+node_modules/
+dist/
+.vite/
+
+# ── Python ──
+server/venv/
+server/__pycache__/
+**/__pycache__/
+*.pyc
+
+# ── Database files (rebuilt inside container) ──
+server/medai.db
+
+# ── Environment secrets ──
+server/.env
+.env
+.env.local
+
+# ── Git & IDE ──
+.git/
+.gitignore
+.vscode/
+*.md
+docs/
+
+# ── Docker files (no recursion) ──
+Dockerfile.*
+docker-compose.yml
+.dockerignore
+.env.example
+
+# ── OS junk ──
+.DS_Store
+Thumbs.db
+
+# ── Scripts not needed in containers ──
+ngrok-tunnel.sh
+start.bat
+start.sh
+start-docker.sh
+start-docker.bat

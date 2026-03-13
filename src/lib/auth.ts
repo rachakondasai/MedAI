@@ -3,7 +3,7 @@
  * Handles signup, login, logout, and token management
  */
 
-const API_BASE = 'http://localhost:8000'
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 
 export interface AuthUser {
   id: string
@@ -51,20 +51,39 @@ function authHeaders(): Record<string, string> {
   return token ? { Authorization: `Bearer ${token}` } : {}
 }
 
-async function authRequest(endpoint: string, options: RequestInit = {}) {
-  const res = await fetch(`${API_BASE}${endpoint}`, {
-    ...options,
-    headers: {
-      'Content-Type': 'application/json',
-      ...authHeaders(),
-      ...options.headers,
-    },
-  })
-  if (!res.ok) {
-    const error = await res.json().catch(() => ({ detail: 'Server error' }))
-    throw new Error(error.detail || `HTTP ${res.status}`)
+async function authRequest(endpoint: string, options: RequestInit = {}, timeoutMs: number = 15000) {
+  const controller = new AbortController()
+  const timer = setTimeout(() => controller.abort(), timeoutMs)
+
+  try {
+    const res = await fetch(`${API_BASE}${endpoint}`, {
+      ...options,
+      signal: controller.signal,
+      headers: {
+        'Content-Type': 'application/json',
+        'ngrok-skip-browser-warning': 'true',
+        ...authHeaders(),
+        ...options.headers,
+      },
+    })
+    clearTimeout(timer)
+    if (!res.ok) {
+      const error = await res.json().catch(() => ({ detail: 'Server error' }))
+      throw new Error(error.detail || `HTTP ${res.status}`)
+    }
+    // Guard against ngrok HTML interstitial pages
+    const contentType = res.headers.get('content-type') || ''
+    if (!contentType.includes('application/json')) {
+      throw new Error('Unexpected response from server. Check API URL and try again.')
+    }
+    return res.json()
+  } catch (err: any) {
+    clearTimeout(timer)
+    if (err.name === 'AbortError') {
+      throw new Error('Request timed out. The backend may be unresponsive.')
+    }
+    throw err
   }
-  return res.json()
 }
 
 // --- Auth Functions ---
@@ -207,4 +226,10 @@ export async function getUserSearchLogs(limit = 50): Promise<any[]> {
 
 export async function getUserReports(limit = 50): Promise<any[]> {
   return authRequest(`/api/user/reports?limit=${limit}`)
+}
+
+export async function deleteUserReport(reportId: string): Promise<{ message: string; report_id: string }> {
+  return authRequest(`/api/user/reports/${reportId}`, {
+    method: 'DELETE',
+  })
 }

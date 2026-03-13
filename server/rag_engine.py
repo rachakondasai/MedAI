@@ -64,6 +64,38 @@ class RAGEngine:
 
         return len(chunks)
 
+    def remove_documents_by_source(self, source_name: str) -> bool:
+        """Remove all documents matching the given source filename from the FAISS index.
+        Rebuilds the index from the remaining documents. Returns True if any were removed."""
+        if self.vectorstore is None:
+            return False
+
+        # Get all documents from the existing store
+        docstore = self.vectorstore.docstore
+        index_to_id = self.vectorstore.index_to_docstore_id
+
+        remaining_docs = []
+        removed_any = False
+        for idx, doc_id in index_to_id.items():
+            doc = docstore.search(doc_id)
+            if hasattr(doc, 'metadata') and doc.metadata.get('source') == source_name:
+                removed_any = True
+            else:
+                remaining_docs.append(doc)
+
+        if not removed_any:
+            return False
+
+        # Also remove from _all_texts (best-effort: remove text associated with this source)
+        # _all_texts is a flat list of full report texts — we can't map them precisely,
+        # but we rebuild the index from remaining docs
+        if remaining_docs:
+            self.vectorstore = FAISS.from_documents(remaining_docs, self.embeddings)
+        else:
+            self.vectorstore = None
+
+        return True
+
     def query(self, question: str, k: int = 4) -> list[Document]:
         """Retrieve relevant chunks for a question."""
         if self.vectorstore is None:

@@ -8,7 +8,9 @@ import uuid
 from datetime import datetime, timezone
 from contextlib import contextmanager
 
-DB_PATH = os.path.join(os.path.dirname(__file__), "medai.db")
+# Use /data/medai.db inside Docker (volume-mounted), or local file otherwise
+_data_dir = os.environ.get("MEDAI_DATA_DIR", os.path.dirname(__file__))
+DB_PATH = os.path.join(_data_dir, "medai.db")
 
 
 def get_connection() -> sqlite3.Connection:
@@ -352,6 +354,20 @@ def get_report_uploads(user_id: str = None, limit: int = 50) -> list[dict]:
                 (limit,),
             ).fetchall()
         return [dict(r) for r in rows]
+
+
+def delete_report(report_id: str, user_id: str) -> dict | None:
+    """Delete a specific report by ID (only if owned by the user). Returns the deleted row as dict, or None."""
+    with get_db() as conn:
+        row = conn.execute(
+            "SELECT * FROM report_uploads WHERE id = ? AND user_id = ?",
+            (report_id, user_id),
+        ).fetchone()
+        if not row:
+            return None
+        result = dict(row)
+        conn.execute("DELETE FROM report_uploads WHERE id = ? AND user_id = ?", (report_id, user_id))
+        return result
 
 
 # --- User Preferences Operations ---

@@ -9,4 +9,8 @@ export default defineConfig({
       '@': path.resolve(__dirname, './src'),
     },
   },
+  server: {
+    host: true,          // listen on 0.0.0.0 so ngrok can reach it
+    allowedHosts: true, // allow *.ngrok-free.app and any other tunnel hosts
+  },
 })

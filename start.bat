@@ -38,7 +38,9 @@ echo.
 echo [3/4] Checking environment...
 if not exist ".env" (
     copy .env.example .env
-    echo    Created server\.env from template.
+    REM Generate a JWT secret automatically
+    python -c "import secrets; s=secrets.token_urlsafe(32); open('.env','r+').write(open('.env').read().replace('JWT_SECRET=your-jwt-secret-here','JWT_SECRET='+s))" 2>nul
+    echo    Created server\.env with auto-generated JWT secret.
     echo    WARNING: No OpenAI API key set. Add it via Settings page.
 ) else (
     echo    server\.env already exists.

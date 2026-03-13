@@ -1,0 +1,65 @@
+# ─────────────────────────────────────────────────────────
+# MedAI Healthcare Platform — Docker Compose
+# ─────────────────────────────────────────────────────────
+# Starts: Frontend (React+Nginx) + Backend (FastAPI) + ngrok tunnel
+#
+# Usage:
+#   docker compose up --build          (build & start all)
+#   docker compose up -d               (detached / background)
+#   docker compose down                (stop & remove)
+#   docker compose logs -f backend     (tail backend logs)
+#   docker compose logs -f ngrok       (see ngrok public URL)
+#
+# After startup, find your public URL:
+#   curl -s http://localhost:4040/api/tunnels | python3 -c \
+#     "import sys,json; [print(t['public_url']) for t in json.load(sys.stdin)['tunnels']]"
+# ─────────────────────────────────────────────────────────
+
+services:
+  # ── Frontend (React + Nginx) ──
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+      args:
+        VITE_API_URL: ""
+    container_name: medai-frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+  # ── Backend (FastAPI + LangChain + RAG) ──
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    container_name: medai-backend
+    ports:
+      - "8000:8000"
+    env_file:
+      - ./server/.env
+    environment:
+      - PYTHONUNBUFFERED=1
+      - JWT_SECRET=${JWT_SECRET:-medai-production-jwt-secret-key-2024}
+    volumes:
+      - medai-data:/data
+    restart: unless-stopped
+
+  # ── ngrok Tunnel (exposes frontend to the internet) ──
+  ngrok:
+    image: ngrok/ngrok:latest
+    container_name: medai-ngrok
+    restart: unless-stopped
+    ports:
+      - "4040:4040"     # ngrok inspector dashboard
+    environment:
+      - NGROK_AUTHTOKEN=${NGROK_AUTHTOKEN:-}
+    command: http frontend:80 --log stdout
+    depends_on:
+      - frontend
+
+volumes:
+  medai-data:
+    driver: local

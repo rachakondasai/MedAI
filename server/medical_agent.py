@@ -121,12 +121,23 @@ class AgentState(TypedDict):
 
 # --- Medical Agent ---
 
+# Map frontend model IDs to actual OpenAI-compatible model names
+MODEL_MAP = {
+    "gpt-4o": "gpt-4o",
+    "gpt-4-turbo": "gpt-4-turbo",
+    "gpt-3.5-turbo": "gpt-3.5-turbo",
+    "gpt-4o-mini": "gpt-4o-mini",
+}
+
+
 class MedicalAgent:
-    def __init__(self, api_key: str):
+    def __init__(self, api_key: str, model: str = "gpt-4o-mini"):
         self.api_key = api_key
+        # Resolve model name (fall back to gpt-4o-mini for unsupported/non-OpenAI models)
+        resolved_model = MODEL_MAP.get(model, "gpt-4o-mini")
         self.llm = ChatOpenAI(
             openai_api_key=api_key,
-            model="gpt-4o-mini",
+            model=resolved_model,
             temperature=0.3,
             max_tokens=2000,
         )

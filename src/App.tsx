@@ -38,11 +38,11 @@ export default function App() {
   }
 
   return (
-    <div className="flex h-screen bg-slate-50">
+    <div className="flex h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50/20 mesh-bg relative">
       <Sidebar user={user} onLogout={handleLogout} />
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div className="flex-1 flex flex-col overflow-hidden relative">
         <Header user={user} userLocation={userLocation} />
-        <main className="flex-1 overflow-y-auto">
+        <main className="flex-1 overflow-y-auto relative">
           <Routes>
             <Route path="/" element={<Dashboard userLocation={userLocation} />} />
             <Route path="/ai-doctor" element={<AIDoctor userLocation={userLocation} />} />

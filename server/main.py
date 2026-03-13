@@ -68,10 +68,11 @@ def get_api_key(api_key: Optional[str] = None) -> str:
     return key.strip()
 
 
-def get_agent(api_key: str) -> MedicalAgent:
-    if api_key not in _agents:
-        _agents[api_key] = MedicalAgent(api_key)
-    return _agents[api_key]
+def get_agent(api_key: str, model: str = "gpt-4o-mini") -> MedicalAgent:
+    cache_key = f"{api_key}:{model}"
+    if cache_key not in _agents:
+        _agents[cache_key] = MedicalAgent(api_key, model=model)
+    return _agents[cache_key]
 
 
 def get_rag(api_key: str) -> RAGEngine:
@@ -87,6 +88,7 @@ class ChatRequest(BaseModel):
     api_key: Optional[str] = None
     conversation_history: list[dict] = []
     location: Optional[str] = None
+    model: Optional[str] = None
 
 class ChatResponse(BaseModel):
     reply: str
@@ -152,6 +154,11 @@ async def root():
     return {"status": "ok", "service": "MedAI Healthcare API v3.0"}
 
 
+@app.get("/api/health")
+async def health():
+    return {"status": "ok", "service": "MedAI Healthcare API v3.0"}
+
+
 @app.post("/api/validate-key")
 async def validate_key(req: APIKeyRequest):
     """Validate an OpenAI API key."""
@@ -168,7 +175,8 @@ async def validate_key(req: APIKeyRequest):
 async def chat(req: ChatRequest, user: dict | None = Depends(auth.get_current_user)):
     """Main chat endpoint — uses LangGraph medical agent. Logs queries to database."""
     api_key = get_api_key(req.api_key)
-    agent = get_agent(api_key)
+    model = req.model or "gpt-4o-mini"
+    agent = get_agent(api_key, model=model)
     rag = get_rag(api_key)
 
     start_time = time.time()
@@ -187,12 +195,17 @@ async def chat(req: ChatRequest, user: dict | None = Depends(auth.get_current_us
             sources = list(set([doc.metadata.get("source", "uploaded document") for doc in results]))
 
     # Run the LangGraph medical agent
-    result = await agent.run(
-        message=req.message,
-        conversation_history=req.conversation_history,
-        rag_context=rag_context,
-        location=req.location or "",
-    )
+    try:
+        result = await agent.run(
+            message=req.message,
+            conversation_history=req.conversation_history,
+            rag_context=rag_context,
+            location=req.location or "",
+        )
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"AI agent error: {str(e)}")
 
     elapsed_ms = int((time.time() - start_time) * 1000)
 
@@ -304,6 +317,27 @@ async def user_search_logs(user: dict = Depends(auth.require_auth), limit: int =
 async def user_reports(user: dict = Depends(auth.require_auth), limit: int = 50):
     """Get the authenticated user's uploaded reports."""
     return db.get_report_uploads(user_id=user["id"], limit=limit)
+
+
+@app.delete("/api/user/reports/{report_id}")
+async def delete_user_report(report_id: str, user: dict = Depends(auth.require_auth)):
+    """Delete a specific report uploaded by the authenticated user.
+    Also removes the document from any active RAG sessions so it no longer
+    appears in chat context."""
+    deleted = db.delete_report(report_id=report_id, user_id=user["id"])
+    if not deleted:
+        raise HTTPException(status_code=404, detail="Report not found or not owned by you.")
+
+    # Remove the report's chunks from all active RAG engine instances
+    filename = deleted.get("filename", "")
+    if filename:
+        for rag in _rag_engines.values():
+            try:
+                rag.remove_documents_by_source(filename)
+            except Exception:
+                pass  # best-effort removal
+
+    return {"message": "Report deleted successfully.", "report_id": report_id}
 
 
 @app.get("/api/user/sessions")

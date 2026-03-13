@@ -9,9 +9,16 @@
     "preview": "vite preview",
     "start": "concurrently --names \"FRONTEND,BACKEND\" --prefix-colors \"cyan,green\" \"npm run dev\" \"cd server && ./venv/bin/python main.py\"",
     "start:win": "concurrently --names \"FRONTEND,BACKEND\" --prefix-colors \"cyan,green\" \"npm run dev\" \"cd server && .\\venv\\Scripts\\python main.py\"",
-    "setup": "npm install && cd server && python3 -m venv venv && ./venv/bin/pip install -r requirements.txt && cp -n .env.example .env || true"
+    "setup": "npm install && cd server && python3 -m venv venv && ./venv/bin/pip install -r requirements.txt && cp -n .env.example .env || true",
+    "docker": "bash start-docker.sh",
+    "docker:stop": "docker compose down",
+    "docker:logs": "docker compose logs -f",
+    "tunnel": "bash ngrok-tunnel.sh"
   },
   "dependencies": {
+    "@react-three/drei": "^9.114.3",
+    "@react-three/fiber": "^8.17.10",
+    "@types/three": "^0.169.0",
     "clsx": "^2.1.1",
     "framer-motion": "^11.5.0",
     "lucide-react": "^0.441.0",
@@ -19,9 +26,11 @@
     "react-dom": "^18.3.1",
     "react-router-dom": "^6.26.0",
     "recharts": "^2.12.7",
-    "tailwind-merge": "^2.5.2"
+    "tailwind-merge": "^2.5.2",
+    "three": "^0.169.0"
   },
   "devDependencies": {
+    "@types/node": "^25.5.0",
     "@types/react": "^18.3.5",
     "@types/react-dom": "^18.3.0",
     "@vitejs/plugin-react": "^4.3.1",

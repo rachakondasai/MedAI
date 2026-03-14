@@ -1,0 +1,24 @@
+# ─────────────────────────────────────────────────
+# MedAI — Render.com Blueprint
+# One-click deploy: https://render.com/deploy
+# ─────────────────────────────────────────────────
+
+services:
+  - type: web
+    name: medai-healthcare
+    runtime: docker
+    dockerfilePath: ./Dockerfile.render
+    plan: free
+    region: oregon
+    healthCheckPath: /api/health
+    envVars:
+      - key: PORT
+        value: "10000"
+      - key: JWT_SECRET
+        sync: false       # Render will prompt you to enter this
+      - key: OPENAI_API_KEY
+        sync: false       # Render will prompt you to enter this
+    disk:
+      name: medai-data
+      mountPath: /data
+      sizeGB: 1

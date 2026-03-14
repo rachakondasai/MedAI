@@ -27,6 +27,7 @@ docs/
 # ── Docker files (no recursion) ──
 Dockerfile.*
 docker-compose.yml
+docker-compose.override.yml
 .dockerignore
 .env.example
 
@@ -40,3 +41,5 @@ start.bat
 start.sh
 start-docker.sh
 start-docker.bat
+deploy-render.sh
+get-url.sh

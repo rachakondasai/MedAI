@@ -138,7 +138,65 @@ NGROK_AUTHTOKEN=2abc123def_your_token_here
 
 Then run `./start-docker.sh` — ngrok starts automatically every time.
 
+#### Get a Permanent ngrok URL (Free Static Domain)
+
+By default, ngrok gives a random URL that changes each restart. To get a **permanent URL**:
+
+1. Go to [https://dashboard.ngrok.com/domains](https://dashboard.ngrok.com/domains)
+2. Click **"New Domain"** (free accounts get 1 static domain)
+3. Copy the domain (e.g. `your-name-medai.ngrok-free.app`)
+4. Add it to your `.env` file:
+
+```bash
+# .env
+NGROK_AUTHTOKEN=your_token_here
+NGROK_DOMAIN=your-name-medai.ngrok-free.app
+```
+
+5. Restart: `docker compose down && ./start-docker.sh`
+
+Now your app is always at `https://your-name-medai.ngrok-free.app` — same URL every time!
+
+> **Note:** ngrok requires your Mac/PC to be running. For true 24/7 access (even when your machine is off), use **Option 3: Cloud Deployment**.
+
 > **Tip:** Anyone with the ngrok URL can use the full app (login, chat, upload reports) from their phone or laptop.
+
+---
+
+### Option 3: Cloud Deployment — Always-On (Render.com)
+
+Deploy to Render.com for a **permanent URL that works 24/7**, even when your Mac is off.
+
+**One-click deploy:**
+
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/rachakondasai/MedAI)
+
+**Or manually:**
+
+```bash
+chmod +x deploy-render.sh
+./deploy-render.sh
+```
+
+**Manual Render setup:**
+
+1. Go to [dashboard.render.com/new/web-service](https://dashboard.render.com/new/web-service)
+2. Connect your GitHub repo
+3. Choose **Docker** runtime, set Dockerfile path to `Dockerfile.render`
+4. Add environment variables:
+   - `JWT_SECRET` = `medai-production-jwt-secret-key-2024`
+   - `OPENAI_API_KEY` = *(your key, or leave blank — add via Settings page)*
+   - `PORT` = `10000`
+5. Select **Free** plan → click **Create Web Service**
+
+Your app will be live at: `https://medai-healthcare.onrender.com`
+
+| Cloud Provider | Free Tier | Deploy Method |
+|----------------|-----------|---------------|
+| **Render.com** | Free (spins down after 15min idle) | `render.yaml` blueprint |
+| **Railway.app** | $5 free credit/mo | Docker deploy |
+| **Fly.io** | 3 free VMs | `fly launch` |
+| **Oracle Cloud** | Always-free VM | Docker on VM |
 
 ---
 
@@ -289,6 +347,7 @@ docker compose down -v
 |----------|-------------|---------|
 | `VITE_API_URL` | Backend URL for frontend | `http://localhost:8000` |
 | `NGROK_AUTHTOKEN` | ngrok token for public tunnel | *(empty)* |
+| `NGROK_DOMAIN` | ngrok static domain (permanent URL) | *(empty)* |
 
 ### `server/.env` (backend)
 
@@ -305,10 +364,15 @@ docker compose down -v
 MedAI/
 ├── start.sh / start.bat           # One-command local start
 ├── start-docker.sh / .bat         # One-command Docker start
+├── deploy-render.sh               # Deploy to Render.com (always-on)
 ├── docker-compose.yml             # Frontend + Backend + ngrok
 ├── Dockerfile.frontend            # Multi-stage: Node build + Nginx
 ├── Dockerfile.backend             # Python 3.13 + FastAPI + LangChain
-├── nginx.conf                     # SPA routing + API reverse proxy
+├── Dockerfile.render              # Single container for cloud deploy
+├── render.yaml                    # Render.com one-click deploy blueprint
+├── nginx.conf                     # SPA routing + API reverse proxy (Docker)
+├── nginx.cloud.conf               # Nginx config for cloud single-container
+├── supervisord.conf               # Process manager for cloud container
 │
 ├── src/                           # React frontend
 │   ├── components/                # Sidebar, ChatInput, Header, Cards...

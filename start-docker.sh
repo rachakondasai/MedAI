@@ -77,6 +77,16 @@ if [ -z "${NGROK_AUTHTOKEN:-}" ]; then
   fi
 fi
 
+# Also load NGROK_DOMAIN if set
+if [ -z "${NGROK_DOMAIN:-}" ]; then
+  if [ -f "$ROOT_DIR/.env" ] && grep -q "^NGROK_DOMAIN=" "$ROOT_DIR/.env"; then
+    NGROK_DOMAIN_VAL=$(grep "^NGROK_DOMAIN=" "$ROOT_DIR/.env" | head -1 | cut -d'=' -f2)
+    if [ -n "$NGROK_DOMAIN_VAL" ]; then
+      export NGROK_DOMAIN="$NGROK_DOMAIN_VAL"
+    fi
+  fi
+fi
+
 if [ -z "${NGROK_AUTHTOKEN:-}" ]; then
   echo ""
   echo -e "${YELLOW}ngrok auth token not found.${NC}"
@@ -93,6 +103,19 @@ if [ -z "${NGROK_AUTHTOKEN:-}" ]; then
 else
   echo -e "${GREEN}ngrok auth token found.${NC}"
   COMPOSE_PROFILES="ngrok"
+
+  # If a static domain is configured, create a compose override
+  if [ -n "${NGROK_DOMAIN:-}" ]; then
+    echo -e "${GREEN}Static ngrok domain: ${BOLD}${NGROK_DOMAIN}${NC}"
+    cat > "$ROOT_DIR/docker-compose.override.yml" <<EOF
+services:
+  ngrok:
+    command: http frontend:80 --log stdout --domain ${NGROK_DOMAIN}
+EOF
+  else
+    # Remove any leftover override
+    rm -f "$ROOT_DIR/docker-compose.override.yml"
+  fi
 fi
 
 # ── 4. Build & Start ──
@@ -142,9 +165,15 @@ echo -e "  API Docs:     ${CYAN}http://localhost:8000/docs${NC}"
 # ── 6. Show ngrok URL if available ──
 if [ -n "${NGROK_AUTHTOKEN:-}" ]; then
   echo ""
-  echo -e "  ${CYAN}Fetching ngrok public URL...${NC}"
-  sleep 3
-  NGROK_URL=$(curl -s http://localhost:4040/api/tunnels 2>/dev/null | python3 -c "
+
+  # If a static domain is set, show it immediately — no need to wait
+  if [ -n "${NGROK_DOMAIN:-}" ]; then
+    echo -e "  Public URL:   ${GREEN}${BOLD}https://${NGROK_DOMAIN}${NC}  (permanent — always the same)"
+    echo -e "  Inspector:    ${CYAN}http://localhost:4040${NC}"
+  else
+    echo -e "  ${CYAN}Fetching ngrok public URL...${NC}"
+    sleep 3
+    NGROK_URL=$(curl -s http://localhost:4040/api/tunnels 2>/dev/null | python3 -c "
 import sys, json
 try:
     data = json.load(sys.stdin)
@@ -154,11 +183,16 @@ try:
 except: pass
 " 2>/dev/null || echo "")
 
-  if [ -n "$NGROK_URL" ]; then
-    echo -e "  Public URL:   ${GREEN}${BOLD}${NGROK_URL}${NC}"
-    echo -e "  Inspector:    ${CYAN}http://localhost:4040${NC}"
-  else
-    echo -e "  ${YELLOW}ngrok URL not ready yet. Check: http://localhost:4040${NC}"
+    if [ -n "$NGROK_URL" ]; then
+      echo -e "  Public URL:   ${GREEN}${BOLD}${NGROK_URL}${NC}  (changes on restart)"
+      echo -e "  Inspector:    ${CYAN}http://localhost:4040${NC}"
+      echo ""
+      echo -e "  ${YELLOW}Tip: Get a permanent URL — free static domain:${NC}"
+      echo -e "  ${CYAN}https://dashboard.ngrok.com/domains${NC} → New Domain"
+      echo -e "  Then add it to .env: ${CYAN}NGROK_DOMAIN=your-name.ngrok-free.app${NC}"
+    else
+      echo -e "  ${YELLOW}ngrok URL not ready yet. Check: http://localhost:4040${NC}"
+    fi
   fi
 fi
 

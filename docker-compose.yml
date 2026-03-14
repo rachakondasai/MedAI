@@ -48,6 +48,11 @@ services:
     restart: unless-stopped
 
   # ── ngrok Tunnel (exposes frontend to the internet) ──
+  # To get a FREE static domain (permanent URL):
+  #   1. Go to https://dashboard.ngrok.com/domains
+  #   2. Click "New Domain" (free accounts get 1 static domain)
+  #   3. Copy the domain (e.g. your-name-medai.ngrok-free.app)
+  #   4. Set NGROK_DOMAIN in your .env file
   ngrok:
     image: ngrok/ngrok:latest
     container_name: medai-ngrok
@@ -56,6 +61,7 @@ services:
       - "4040:4040"     # ngrok inspector dashboard
     environment:
       - NGROK_AUTHTOKEN=${NGROK_AUTHTOKEN:-}
+      - NGROK_DOMAIN=${NGROK_DOMAIN:-}
     command: http frontend:80 --log stdout
     depends_on:
       - frontend

@@ -183,7 +183,10 @@ async def chat(req: ChatRequest, user: dict | None = Depends(auth.get_current_us
     user_id = user["id"] if user else None
 
     # Log the user message to chat history
-    db.log_chat_message(user_id=user_id, role="user", content=req.message)
+    try:
+        db.log_chat_message(user_id=user_id, role="user", content=req.message)
+    except Exception as e:
+        print(f"⚠️ Failed to log user message: {e}")
 
     # Check if RAG has documents and retrieve context
     rag_context = ""
@@ -211,18 +214,24 @@ async def chat(req: ChatRequest, user: dict | None = Depends(auth.get_current_us
 
     # Log the AI response to chat history
     analysis_json = json.dumps(result.get("analysis")) if result.get("analysis") else None
-    db.log_chat_message(user_id=user_id, role="assistant", content=result["reply"], analysis_json=analysis_json)
+    try:
+        db.log_chat_message(user_id=user_id, role="assistant", content=result["reply"], analysis_json=analysis_json)
+    except Exception as e:
+        print(f"⚠️ Failed to log assistant message: {e}")
 
     # Log the search/query
     risk_level = result.get("analysis", {}).get("riskLevel") if result.get("analysis") else None
-    db.log_search(
-        user_id=user_id,
-        query=req.message,
-        response_preview=result["reply"][:200],
-        sources=", ".join(sources) if sources else None,
-        risk_level=risk_level,
-        duration_ms=elapsed_ms,
-    )
+    try:
+        db.log_search(
+            user_id=user_id,
+            query=req.message,
+            response_preview=result["reply"][:200],
+            sources=", ".join(sources) if sources else None,
+            risk_level=risk_level,
+            duration_ms=elapsed_ms,
+        )
+    except Exception as e:
+        print(f"⚠️ Failed to log search: {e}")
 
     return ChatResponse(
         reply=result["reply"],

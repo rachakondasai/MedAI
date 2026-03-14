@@ -227,10 +227,16 @@ def log_search(user_id: str | None, query: str, response_preview: str = None,
     log_id = str(uuid.uuid4())
     now = datetime.now(timezone.utc).isoformat()
     with get_db() as conn:
-        conn.execute(
-            "INSERT INTO search_logs (id, user_id, query, response_preview, sources, risk_level, created_at, duration_ms) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-            (log_id, user_id, query, response_preview, sources, risk_level, now, duration_ms),
-        )
+        try:
+            conn.execute(
+                "INSERT INTO search_logs (id, user_id, query, response_preview, sources, risk_level, created_at, duration_ms) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+                (log_id, user_id, query, response_preview, sources, risk_level, now, duration_ms),
+            )
+        except sqlite3.IntegrityError:
+            conn.execute(
+                "INSERT INTO search_logs (id, user_id, query, response_preview, sources, risk_level, created_at, duration_ms) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+                (log_id, None, query, response_preview, sources, risk_level, now, duration_ms),
+            )
     return log_id
 
 
@@ -302,10 +308,17 @@ def log_chat_message(user_id: str | None, role: str, content: str, analysis_json
     msg_id = str(uuid.uuid4())
     now = datetime.now(timezone.utc).isoformat()
     with get_db() as conn:
-        conn.execute(
-            "INSERT INTO chat_history (id, user_id, role, content, analysis_json, created_at, session_id) VALUES (?, ?, ?, ?, ?, ?, ?)",
-            (msg_id, user_id, role, content, analysis_json, now, session_id),
-        )
+        try:
+            conn.execute(
+                "INSERT INTO chat_history (id, user_id, role, content, analysis_json, created_at, session_id) VALUES (?, ?, ?, ?, ?, ?, ?)",
+                (msg_id, user_id, role, content, analysis_json, now, session_id),
+            )
+        except sqlite3.IntegrityError:
+            # user_id not in users table (e.g. stale JWT from another DB) — log without user
+            conn.execute(
+                "INSERT INTO chat_history (id, user_id, role, content, analysis_json, created_at, session_id) VALUES (?, ?, ?, ?, ?, ?, ?)",
+                (msg_id, None, role, content, analysis_json, now, session_id),
+            )
     return msg_id
 
 
@@ -332,10 +345,16 @@ def log_report_upload(user_id: str | None, filename: str, chunks_indexed: int):
     upload_id = str(uuid.uuid4())
     now = datetime.now(timezone.utc).isoformat()
     with get_db() as conn:
-        conn.execute(
-            "INSERT INTO report_uploads (id, user_id, filename, chunks_indexed, created_at) VALUES (?, ?, ?, ?, ?)",
-            (upload_id, user_id, filename, chunks_indexed, now),
-        )
+        try:
+            conn.execute(
+                "INSERT INTO report_uploads (id, user_id, filename, chunks_indexed, created_at) VALUES (?, ?, ?, ?, ?)",
+                (upload_id, user_id, filename, chunks_indexed, now),
+            )
+        except sqlite3.IntegrityError:
+            conn.execute(
+                "INSERT INTO report_uploads (id, user_id, filename, chunks_indexed, created_at) VALUES (?, ?, ?, ?, ?)",
+                (upload_id, None, filename, chunks_indexed, now),
+            )
     return upload_id
 
 
@@ -409,13 +428,17 @@ def log_vitals(user_id: str, heart_rate: float = None, blood_pressure_sys: float
     vital_id = str(uuid.uuid4())
     now = datetime.now(timezone.utc).isoformat()
     with get_db() as conn:
-        conn.execute(
-            """INSERT INTO vitals_log (id, user_id, heart_rate, blood_pressure_sys, blood_pressure_dia,
-               temperature, spo2, blood_sugar, weight, notes, recorded_at)
-               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
-            (vital_id, user_id, heart_rate, blood_pressure_sys, blood_pressure_dia,
-             temperature, spo2, blood_sugar, weight, notes, now),
-        )
+        try:
+            conn.execute(
+                """INSERT INTO vitals_log (id, user_id, heart_rate, blood_pressure_sys, blood_pressure_dia,
+                   temperature, spo2, blood_sugar, weight, notes, recorded_at)
+                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                (vital_id, user_id, heart_rate, blood_pressure_sys, blood_pressure_dia,
+                 temperature, spo2, blood_sugar, weight, notes, now),
+            )
+        except sqlite3.IntegrityError:
+            # user_id not in users table — skip logging rather than crash
+            pass
     return {
         "id": vital_id, "user_id": user_id,
         "heart_rate": heart_rate, "blood_pressure_sys": blood_pressure_sys,

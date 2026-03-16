@@ -8,12 +8,39 @@
   box-sizing: border-box;
 }
 
+/* ══════════════════════════════════════════════════════ */
+/*  MOBILE APP — SAFE AREAS & NATIVE FEEL               */
+/* ══════════════════════════════════════════════════════ */
+
+html {
+  /* Prevent pull-to-refresh on mobile */
+  overscroll-behavior: none;
+  /* Safe area for notch/dynamic island */
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+}
+
 body {
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
   background-color: #f8fafc;
   color: #0f172a;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  /* Prevent text selection on long-press for native feel */
+  -webkit-user-select: none;
+  user-select: none;
+  /* Prevent callout on iOS */
+  -webkit-touch-callout: none;
+  /* Prevent tap highlight */
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Allow text selection in input fields and text areas */
+input, textarea, [contenteditable="true"], .selectable {
+  -webkit-user-select: text;
+  user-select: text;
 }
 
 /* ══════════════════════════════════════════════════════ */

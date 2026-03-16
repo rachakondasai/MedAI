@@ -3,6 +3,10 @@ node_modules/
 dist/
 .vite/
 
+# ── Capacitor mobile platforms (not needed in Docker) ──
+android/
+ios/
+
 # ── Python ──
 server/venv/
 server/__pycache__/

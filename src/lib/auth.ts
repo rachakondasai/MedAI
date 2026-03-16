@@ -3,7 +3,10 @@
  * Handles signup, login, logout, and token management
  */
 
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000'
+// Use ?? (nullish coalescing) — NOT || — so that VITE_API_URL="" correctly
+// produces an empty string (relative URLs via Nginx), instead of falling back
+// to localhost:8000 which doesn't exist on mobile/remote devices.
+const API_BASE = import.meta.env.VITE_API_URL ?? 'http://localhost:8000'
 
 export interface AuthUser {
   id: string

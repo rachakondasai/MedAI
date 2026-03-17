@@ -14,10 +14,14 @@ import Login from './pages/Login'
 import LearningLab from './pages/LearningLab'
 import { isAuthenticated, isAdmin, getStoredUser, type AuthUser } from './lib/auth'
 import { useUserLocation } from './lib/useLocation'
+import { Menu } from 'lucide-react'
 
 export default function App() {
   const [authed, setAuthed] = useState(isAuthenticated())
   const [user, setUser] = useState<AuthUser | null>(getStoredUser())
+
+  // Sidebar open state
+  const [sidebarOpen, setSidebarOpen] = useState(true)
 
   // Global location detection — runs once on app load
   const geo = useUserLocation()
@@ -39,9 +43,24 @@ export default function App() {
 
   return (
     <div className="flex h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50/20 mesh-bg relative">
-      <Sidebar user={user} onLogout={handleLogout} />
+      <Sidebar
+        user={user}
+        onLogout={handleLogout}
+        show={sidebarOpen}
+        onClose={() => setSidebarOpen(false)}
+      />
       <div className="flex-1 flex flex-col overflow-hidden relative">
         <Header user={user} userLocation={userLocation} />
+        {/* Add a button to open sidebar for mobile */}
+        {!sidebarOpen && (
+          <button
+            className="fixed top-4 left-4 z-50 bg-white rounded-full p-2 shadow-md md:hidden"
+            onClick={() => setSidebarOpen(true)}
+            aria-label="Open sidebar"
+          >
+            <Menu className="w-5 h-5 text-slate-500" />
+          </button>
+        )}
         <main className="flex-1 overflow-y-auto relative">
           <Routes>
             <Route path="/" element={<Dashboard userLocation={userLocation} />} />

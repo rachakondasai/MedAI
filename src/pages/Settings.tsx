@@ -91,7 +91,7 @@ export default function Settings() {
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[400px] bg-gradient-to-r from-emerald-50/20 via-cyan-50/10 to-blue-50/20 rounded-full blur-3xl" />
       </div>
 
-      <div className="p-6 max-w-3xl mx-auto space-y-6 pb-12">
+      <div className="p-3 sm:p-6 space-y-6 max-w-4xl mx-auto relative min-h-[100svh] md:min-h-0">
         {/* Premium Page Header */}
         <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5 }}>
           <div className="relative bg-gradient-to-br from-slate-800 via-slate-900 to-indigo-950 rounded-3xl p-6 overflow-hidden shadow-2xl shadow-slate-900/30">

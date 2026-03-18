@@ -58,7 +58,7 @@ export default function Medicines() {
         <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-gradient-to-bl from-emerald-100/25 via-teal-50/10 to-transparent rounded-full blur-3xl" />
         <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-gradient-to-tr from-green-100/20 via-cyan-50/10 to-transparent rounded-full blur-3xl" />
       </div>
-    <div className="p-6 space-y-6 max-w-7xl mx-auto pb-12">
+    <div className="p-3 sm:p-6 space-y-6 max-w-4xl mx-auto relative min-h-[100svh] md:min-h-0 pb-12">
       {/* Header — Premium */}
       <motion.div
         initial={{ opacity: 0, y: -15 }}

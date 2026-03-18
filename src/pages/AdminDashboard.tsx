@@ -347,7 +347,7 @@ export default function AdminDashboard() {
     : []
 
   return (
-    <div className="h-full overflow-y-auto">
+    <div className="p-3 sm:p-6 space-y-6 max-w-4xl mx-auto relative min-h-[100svh] md:min-h-0">
       <div className="max-w-7xl mx-auto p-6 space-y-6">
         {/* ═══ Header ═══ */}
         <motion.div

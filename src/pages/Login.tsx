@@ -76,7 +76,7 @@ export default function Login({ onAuth }: Props) {
         style={{ backgroundSize: '200% 200%' }}
       />
 
-      <div className="flex w-full max-w-4xl relative z-10">
+      <div className="p-3 sm:p-6 space-y-6 max-w-4xl mx-auto relative min-h-[100svh] md:min-h-0">
         {/* Left Panel — Branding */}
         <motion.div
           initial={{ opacity: 0, x: -30 }}

@@ -87,7 +87,7 @@ export default function Hospitals({ userLocation = '' }: { userLocation?: string
         <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-gradient-to-bl from-blue-100/30 via-indigo-50/15 to-transparent rounded-full blur-3xl" />
         <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-gradient-to-tr from-cyan-100/20 via-sky-50/10 to-transparent rounded-full blur-3xl" />
       </div>
-    <div className="p-6 space-y-6 max-w-7xl mx-auto pb-12">
+    <div className="p-3 sm:p-6 space-y-6 max-w-4xl mx-auto relative min-h-[100svh] md:min-h-0">
       {/* Header — Premium */}
       <motion.div
         initial={{ opacity: 0, y: -15 }}

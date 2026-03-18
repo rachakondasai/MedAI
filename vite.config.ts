@@ -13,4 +13,7 @@ export default defineConfig({
     host: true,          // listen on 0.0.0.0 so ngrok can reach it
     allowedHosts: true, // allow *.ngrok-free.app and any other tunnel hosts
   },
+  build: {
+    sourcemap: true, // Enable source maps for production
+  },
 })

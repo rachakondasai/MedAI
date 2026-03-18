@@ -178,19 +178,19 @@ export default function Dashboard({ userLocation = '' }: { userLocation?: string
   }
 
   return (
-    <div className="p-6 space-y-6 max-w-7xl mx-auto relative">
+    <div className="p-3 sm:p-6 space-y-6 max-w-7xl mx-auto relative min-h-[100svh] md:min-h-0">
       {/* Ambient page background */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden -z-10">
-        <div className="absolute top-0 right-1/4 w-[500px] h-[500px] bg-blue-100/15 rounded-full blur-3xl" />
-        <div className="absolute bottom-1/4 left-0 w-[400px] h-[400px] bg-emerald-100/10 rounded-full blur-3xl" />
-        <div className="absolute top-1/3 right-0 w-[300px] h-[300px] bg-purple-100/10 rounded-full blur-3xl" />
+        <div className="absolute top-0 right-1/4 w-[300px] h-[300px] sm:w-[500px] sm:h-[500px] bg-blue-100/15 rounded-full blur-3xl" />
+        <div className="absolute bottom-1/4 left-0 w-[200px] h-[200px] sm:w-[400px] sm:h-[400px] bg-emerald-100/10 rounded-full blur-3xl" />
+        <div className="absolute top-1/3 right-0 w-[150px] h-[150px] sm:w-[300px] sm:h-[300px] bg-purple-100/10 rounded-full blur-3xl" />
       </div>
 
       {/* Welcome Banner — Extreme Premium */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="relative rounded-3xl overflow-hidden shadow-2xl shadow-emerald-500/10"
+        className="relative rounded-2xl sm:rounded-3xl overflow-hidden shadow-xl sm:shadow-2xl shadow-emerald-500/10"
       >
         {/* Animated gradient background */}
         <div className="absolute inset-0 bg-gradient-to-r from-emerald-600 via-teal-500 to-blue-600 animated-border" />
@@ -324,7 +324,7 @@ export default function Dashboard({ userLocation = '' }: { userLocation?: string
       </AnimatePresence>
 
       {/* Quick Actions — Premium Glassmorphism Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 xs:grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-4">
         {quickActions.map((action, i) => (
           <motion.button
             key={action.label}
@@ -353,7 +353,7 @@ export default function Dashboard({ userLocation = '' }: { userLocation?: string
       </div>
 
       {/* Stats Cards — Premium Animated */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4">
         {[
           {
             title: 'Health Score',
@@ -436,13 +436,13 @@ export default function Dashboard({ userLocation = '' }: { userLocation?: string
       </div>
 
       {/* Health Summary + Activity */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 sm:gap-6">
         {/* Health Summary Panel — Premium */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
-          className="lg:col-span-2 glass-card rounded-2xl p-6 relative overflow-hidden"
+          className="lg:col-span-2 glass-card rounded-xl sm:rounded-2xl p-3 sm:p-6 relative overflow-hidden"
         >
           <div className="absolute top-0 right-0 w-48 h-48 bg-gradient-to-br from-blue-50/40 to-transparent rounded-full -translate-y-1/2 translate-x-1/2" />
           <div className="flex items-center justify-between mb-5 relative z-10">
@@ -563,7 +563,7 @@ export default function Dashboard({ userLocation = '' }: { userLocation?: string
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
-          className="glass-card rounded-2xl p-6"
+          className="glass-card rounded-xl sm:rounded-2xl p-3 sm:p-6"
         >
           <h3 className="font-black text-slate-900 mb-4 flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-purple-500/20">
@@ -616,7 +616,7 @@ export default function Dashboard({ userLocation = '' }: { userLocation?: string
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.35 }}
-        className="glass-card rounded-2xl p-6 relative overflow-hidden"
+        className="glass-card rounded-xl sm:rounded-2xl p-3 sm:p-6 relative overflow-hidden"
       >
         <div className="absolute top-0 right-0 w-56 h-56 bg-gradient-to-br from-red-50/30 to-transparent rounded-full -translate-y-1/2 translate-x-1/2" />
         <div className="flex items-center justify-between mb-5 relative z-10">
@@ -824,7 +824,7 @@ export default function Dashboard({ userLocation = '' }: { userLocation?: string
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.4 }}
-        className="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 rounded-3xl p-7 relative overflow-hidden shadow-2xl"
+        className="bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 rounded-2xl sm:rounded-3xl p-4 sm:p-7 relative overflow-hidden shadow-xl sm:shadow-2xl"
       >
         <div className="absolute inset-0 dot-pattern opacity-5" />
         <motion.div

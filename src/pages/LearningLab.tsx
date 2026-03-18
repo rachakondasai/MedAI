@@ -545,21 +545,21 @@ const MODULES: LearningModule[] = [
           { id: 'pe-r4', question: 'What is "context injection" in RAG-based prompts?', options: ['Injecting malicious code', 'Inserting retrieved document chunks into the prompt so the AI can use patient-specific data', 'Adding more system prompts', 'Increasing the context window size'], correct: 1, explanation: 'Context injection places retrieved RAG chunks into the prompt, grounding the AI response in actual patient data.', difficulty: 'medium', category: 'Prompts' },
           { id: 'pe-r5', question: 'Which prompt pattern in this app handles temperature=0.1?', options: ['MEDICAL_SYSTEM_PROMPT (chat)', 'ANALYSIS_SYSTEM_PROMPT (JSON) — low temperature for deterministic structured output', 'ENRICHMENT_SYSTEM_PROMPT (links)', 'None of them'], correct: 1, explanation: 'The analysis prompt uses temperature=0.1 because structured JSON output requires high determinism — creative randomness would break the schema.', difficulty: 'hard', category: 'Prompts' },
         ],
-      },
+      }, // <-- close lesson object
     ],
   },
   {
-    id: 'full-architecture', title: 'Full App Architecture',
-    description: 'How React, FastAPI, LangChain, LangGraph, and FAISS all connect.',
-    icon: Workflow, gradient: 'from-indigo-500 to-blue-700', glow: 'shadow-indigo-500/20',
-    category: 'System Design', unlocked: true, xpReward: 400,
-    liveTestScenario: LIVE_TESTS['full-architecture'],
-    lessons: [{
-      id: 'arch-overview', title: 'The Complete Picture',
-      content: `**Frontend (React + TypeScript + Vite):** The UI you're using now.\n\n**Backend (FastAPI + Python):** Handles auth, chat, report uploads, AI processing.\n\n**AI Pipeline:**\n1. User sends message → FastAPI receives it\n2. RAG retrieves relevant chunks from FAISS\n3. LangGraph orchestrates: Analyze → Enrich → Respond\n4. Each node uses LangChain's ChatOpenAI\n5. Response flows back to React`,
-      keyPoints: ['Frontend: React + TypeScript + Vite', 'Backend: FastAPI + Python', 'AI: LangChain + LangGraph + GPT-4', 'Data: FAISS vector DB + OpenAI embeddings'],
-      xpReward: 80,
-      flowDiagram: [
+    id: 'full-architecture', title: 'Full Architecture Live Test: End-to-End Flow',
+    description: 'Watch the complete journey from user click to AI response — every component',
+    userInput: '"What does my latest blood report say about my kidney function?"',
+    steps: [
+      { id: 'a1', layer: 'frontend', icon: Monitor, label: 'React: User Types Message', detail: 'ChatInput.tsx captures text, validates, shows typing indicator', duration: 1000, color: 'from-cyan-400 to-cyan-600' },
+      { id: 'a2', layer: 'frontend', icon: Globe, label: 'React: API Call Sent', detail: 'api.ts → fetch(VITE_API_URL + "/api/chat") with JWT auth token', duration: 900, color: 'from-blue-400 to-blue-600' },
+      { id: 'a3', layer: 'backend', icon: Zap, label: 'FastAPI: Route Handler', detail: 'main.py: @app.post("/api/chat") — validates auth, extracts user', duration: 900, color: 'from-green-400 to-green-600' },
+      { id: 'a4', layer: 'backend', icon: Database, label: 'SQLite: Load History', detail: 'database.py fetches last 10 messages for conversation context', duration: 800, color: 'from-green-500 to-emerald-600' },
+      { id: 'a5', layer: 'backend', icon: FileText, label: 'RAG Engine: Check Reports', detail: 'rag_engine.py checks if user has uploaded medical reports', duration: 900, color: 'from-teal-400 to-teal-600' },
+      { id: 'a6', layer: 'ai', icon: Binary, label: 'OpenAI: Embed Query', detail: 'text-embedding-3-small embeds "kidney function" query', duration: 1100, color: 'from-violet-400 to-violet-600' },
+      { id: 'a7', layer: 'database', icon: ScanSearch, label: 'FAISS: Vector Search', detail: 'Finds chunks about creatinine, BUN, eGFR from blood report', duration: 1200, color: 'from-indigo-400 to-indigo-600' },
         { label: 'React UI', icon: Monitor, description: 'User interface', color: 'from-cyan-400 to-cyan-600' },
         { label: 'FastAPI', icon: Zap, description: 'Python backend', color: 'from-green-400 to-green-600' },
         { label: 'LangChain', icon: Link, description: 'AI framework', color: 'from-teal-400 to-teal-600' },
@@ -592,7 +592,7 @@ const ARCH_NODES: ArchNode[] = [
   // Layer 1: Client (top)
   { id: 'user', label: 'User / Patient', icon: User, x: 50, y: 6, color: 'from-sky-400 to-blue-600', description: 'The patient interacting with the system', layer: 'Client', techDetail: 'Browser (Chrome / Safari / Edge)' },
   // Layer 2: Presentation
-  { id: 'react', label: 'React UI', icon: Monitor, x: 30, y: 19, color: 'from-cyan-400 to-cyan-600', description: 'Single-page application', layer: 'Frontend', techDetail: 'React 18 + TypeScript + Vite + Tailwind CSS + Framer Motion' },
+  { id: 'react', label: 'React UI', icon: Monitor, x: 30, y: 19, color: 'from-cyan-400 to-blue-600', description: 'Single-page application', layer: 'Frontend', techDetail: 'React 18 + TypeScript + Vite + Tailwind CSS + Framer Motion' },
   { id: 'auth-ui', label: 'Auth Layer', icon: Shield, x: 70, y: 19, color: 'from-amber-400 to-amber-600', description: 'Client-side authentication', layer: 'Frontend', techDetail: 'JWT Token Management + Protected Routes + Session Storage' },
   // Layer 3: API / Backend
   { id: 'fastapi', label: 'FastAPI', icon: Zap, x: 50, y: 34, color: 'from-emerald-400 to-green-600', description: 'High-performance Python backend', layer: 'Backend', techDetail: 'FastAPI + Uvicorn + Pydantic + CORS + JWT Auth Middleware' },
@@ -1198,7 +1198,7 @@ function ArchitectureDiagram3D({ onClose }: { onClose: () => void }) {
                 <div className={`w-7 h-7 rounded-lg bg-gradient-to-br ${color} flex items-center justify-center shadow-md`}>
                   <LayerIcon className="w-3.5 h-3.5 text-white" />
                 </div>
-                <p className="text-[11px] font-extrabold text-slate-600 uppercase tracking-wider">{layer}</p>
+                <p className={`text-[11px] font-extrabold text-slate-600 uppercase tracking-wider ${accent === 'border-blue-200/50' ? 'text-blue-600' : ''}`}>{layer}</p>
                 <span className="ml-auto text-[10px] font-bold text-slate-300 bg-slate-100 px-1.5 py-0.5 rounded-full">{nodes.length}</span>
               </div>
               <div className="space-y-1.5">{nodes.map(n => (
@@ -1331,7 +1331,7 @@ function LiveTestSimulator({ scenario, onClose, onComplete }: { scenario: LiveTe
         <div className="bg-slate-50 rounded-xl p-4 border border-slate-200 flex items-center gap-3">
           <Send className="w-5 h-5 text-blue-500 flex-shrink-0" />
           <div>
-            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">User Input</p>
+            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">User Input</p>
             <p className="text-sm text-slate-700 font-mono mt-0.5">{scenario.userInput}</p>
           </div>
         </div>

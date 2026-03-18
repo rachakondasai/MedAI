@@ -16,6 +16,7 @@ import {
   Sparkles,
   Zap,
   X,
+  Menu,
 } from 'lucide-react'
 import { logout, type AuthUser } from '../lib/auth'
 
@@ -55,27 +56,35 @@ export default function Sidebar({ user, onLogout, show, onClose }: Props) {
       {/* Overlay for mobile */}
       {isMobile && show && (
         <div
-          className="fixed inset-0 bg-black/30 z-40 transition-opacity duration-300"
+          className="fixed inset-0 bg-black/50 z-40 transition-opacity duration-300"
           onClick={onClose}
         />
       )}
       <AnimatePresence>
         {show && (
           <motion.aside
-            initial={{ x: isMobile ? -320 : -280 }}
-            animate={{ x: 0 }}
-            exit={{ x: isMobile ? -320 : -280 }}
+            initial={{ x: isMobile ? -320 : -280, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            exit={{ x: isMobile ? -320 : -280, opacity: 0 }}
             transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-            className="w-[280px] glass-strong border-r border-white/40 flex flex-col h-full shrink-0 relative overflow-hidden z-50 fixed top-0 left-0"
+            drag={isMobile ? 'x' : false}
+            dragConstraints={{ left: 0, right: 0 }}
+            dragElastic={0.2}
+            onDragEnd={(e, info) => {
+              if (isMobile && info.offset.x < -80) onClose();
+            }}
+            className="w-[85vw] max-w-[320px] glass-strong border-r border-white/40 flex flex-col h-full shrink-0 relative overflow-hidden z-50 fixed top-0 left-0 shadow-2xl rounded-r-2xl md:w-[280px] md:max-w-none md:rounded-none"
+            style={{ touchAction: 'pan-y' }}
           >
             {/* Close button for mobile */}
             {isMobile && (
               <button
-                className="absolute top-4 right-4 z-50 bg-white rounded-full p-2 shadow-md hover:bg-slate-100 transition"
+                className="absolute top-4 right-4 z-50 bg-white rounded-full p-3 shadow-lg hover:bg-slate-100 transition"
                 onClick={onClose}
                 aria-label="Close sidebar"
+                style={{ touchAction: 'manipulation' }}
               >
-                <X className="w-5 h-5 text-slate-500" />
+                <X className="w-7 h-7 text-slate-500" />
               </button>
             )}
 

@@ -114,7 +114,7 @@ export default function History() {
   })
 
   return (
-    <div className="h-full overflow-y-auto relative">
+    <div className="min-h-full relative">
       {/* Ambient mesh background */}
       <div className="fixed inset-0 pointer-events-none -z-10">
         <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-gradient-to-bl from-indigo-100/30 via-blue-50/15 to-transparent rounded-full blur-3xl" />

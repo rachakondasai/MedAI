@@ -280,7 +280,7 @@ export default function AIDoctor({ userLocation = '' }: { userLocation?: string 
   const aiMsgCount = messages.filter((m) => m.role === 'ai').length
 
   return (
-    <div className="flex h-full">
+    <div className="flex" style={{ height: 'calc(100dvh - 120px)', minHeight: 320 }}>
       {/* Main Chat Area */}
       <div className="flex-1 flex flex-col relative">
         {/* Ambient background mesh */}

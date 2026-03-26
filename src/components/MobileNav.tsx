@@ -77,8 +77,8 @@ export default function MobileNav({ user }: Props) {
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: '100%', opacity: 0 }}
             transition={{ type: 'spring', stiffness: 380, damping: 38 }}
-            className="fixed bottom-[72px] left-0 right-0 z-50 bg-white/98 backdrop-blur-2xl rounded-t-[2rem] shadow-[0_-20px_60px_-10px_rgba(0,0,0,0.18)]"
-            style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
+            className="fixed bottom-[60px] left-0 right-0 z-50 bg-white/98 backdrop-blur-2xl rounded-t-[2rem] shadow-[0_-20px_60px_-10px_rgba(0,0,0,0.18)] max-h-[75dvh] overflow-y-auto"
+            style={{ paddingBottom: 'max(env(safe-area-inset-bottom, 8px), 8px)' }}
           >
             <div className="flex justify-center pt-3 pb-1">
               <div className="w-10 h-1 bg-slate-200 rounded-full" />
@@ -148,7 +148,7 @@ export default function MobileNav({ user }: Props) {
       <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 mobile-nav-bar">
         <div
           className="flex items-center justify-around px-1"
-          style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 8px)', paddingTop: '6px' }}
+          style={{ paddingBottom: 'max(env(safe-area-inset-bottom, 8px), 8px)', paddingTop: '6px', minHeight: '60px' }}
         >
           {NAV_ITEMS.map((item, idx) => {
             const isActive = item.to === '/'

@@ -49,13 +49,13 @@ export default function App() {
   }
 
   return (
-    <div className="flex h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50/20 mesh-bg relative">
+    <div className="flex h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50/20 mesh-bg relative overflow-hidden">
       {/* Sidebar — hidden on mobile */}
       <div className="hidden md:block">
         <Sidebar user={user} onLogout={handleLogout} show={sidebarOpen} onClose={() => setSidebarOpen(false)} />
       </div>
 
-      <div className="flex-1 flex flex-col overflow-hidden relative">
+      <div className="flex-1 flex flex-col min-h-0 relative">
         <Header user={user} userLocation={userLocation} />
 
         {!sidebarOpen && (
@@ -68,8 +68,11 @@ export default function App() {
           </button>
         )}
 
-        {/* Main content with animated page transitions */}
-        <main className="flex-1 overflow-y-auto relative pb-[72px] md:pb-0">
+        {/* Main scrollable content — bottom padding clears the mobile nav + safe area */}
+        <main
+          className="flex-1 overflow-y-auto overscroll-contain md:pb-0"
+          style={{ paddingBottom: 'calc(72px + env(safe-area-inset-bottom, 0px))' }}
+        >
           <AnimatePresence mode="wait" initial={false}>
             <Routes location={location} key={location.pathname}>
               <Route path="/" element={<PageTransition id="/"><Dashboard userLocation={userLocation} /></PageTransition>} />

@@ -389,9 +389,9 @@ export default function Dashboard({ userLocation }: Props) {
   }
 
   return (
-    <div className="flex flex-col h-full">
-      {/* Tab Bar */}
-      <div className="sticky top-0 z-20 bg-white/80 backdrop-blur-md border-b border-slate-100 px-4 shadow-sm">
+    <div className="flex flex-col">
+      {/* Tab Bar — sticky relative to the page scroll container (main) */}
+      <div className="sticky top-0 z-20 bg-white/90 backdrop-blur-md border-b border-slate-100 px-4 shadow-sm">
         <div className="flex gap-1 overflow-x-auto no-scrollbar py-2">
           {TABS.map(tab => (
             <button
@@ -428,38 +428,36 @@ export default function Dashboard({ userLocation }: Props) {
         </div>
       </div>
 
-      {/* Tab Content */}
-      <div className="flex-1 overflow-y-auto">
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={activeTab}
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -8 }}
-            transition={{ duration: 0.18 }}
-            className={activeTab === 'home' ? 'p-4 max-w-2xl mx-auto' : ''}
-          >
-            {activeTab === 'home' && (
-              <HomeTab user={user} userLocation={userLocation} onTabChange={handleTabChange} />
-            )}
-            {activeTab === 'ai-doctor' && (
-              <AIDoctor userLocation={userLocation} />
-            )}
-            {activeTab === 'reports' && (
-              <MedicalReports />
-            )}
-            {activeTab === 'hospitals' && (
-              <Hospitals userLocation={userLocation} />
-            )}
-            {activeTab === 'medicines' && (
-              <Medicines />
-            )}
-            {activeTab === 'book-test' && (
-              <Appointments />
-            )}
-          </motion.div>
-        </AnimatePresence>
-      </div>
+      {/* Tab Content — no overflow-y-auto here; parent <main> scrolls */}
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={activeTab}
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -8 }}
+          transition={{ duration: 0.18 }}
+          className={activeTab === 'home' ? 'p-4 max-w-2xl mx-auto' : ''}
+        >
+          {activeTab === 'home' && (
+            <HomeTab user={user} userLocation={userLocation} onTabChange={handleTabChange} />
+          )}
+          {activeTab === 'ai-doctor' && (
+            <AIDoctor userLocation={userLocation} />
+          )}
+          {activeTab === 'reports' && (
+            <MedicalReports />
+          )}
+          {activeTab === 'hospitals' && (
+            <Hospitals userLocation={userLocation} />
+          )}
+          {activeTab === 'medicines' && (
+            <Medicines />
+          )}
+          {activeTab === 'book-test' && (
+            <Appointments />
+          )}
+        </motion.div>
+      </AnimatePresence>
     </div>
   )
 }

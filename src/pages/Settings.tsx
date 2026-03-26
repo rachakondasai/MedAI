@@ -83,7 +83,7 @@ export default function Settings() {
   ]
 
   return (
-    <div className="h-full overflow-y-auto">
+    <div className="min-h-full">
       {/* Ambient mesh background */}
       <div className="fixed inset-0 pointer-events-none -z-10">
         <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-gradient-to-bl from-blue-100/40 via-indigo-50/20 to-transparent rounded-full blur-3xl" />

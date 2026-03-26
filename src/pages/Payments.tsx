@@ -1,21 +1,18 @@
 /**
- * Payments.tsx — Personal PhonePe / UPI QR Payment Page
+ * Payments.tsx — UPI QR Payment Page
  *
- * Works with ANY personal UPI ID (PhonePe, GPay, Paytm, BHIM, etc.)
- * e.g.  9876543210@ybl   (PhonePe personal)
- *       name@oksbi        (GPay)
- *       name@paytm
+ * ⚠️  NEVER hardcode your UPI ID, phone, or personal details here.
+ *     All sensitive values come from environment variables only.
+ *     Set them in .env (local) or Render dashboard (production).
  *
- * Workflow:
- *  1. User picks a plan or blood test
- *  2. QR code is shown with the exact amount (generated locally, no server needed)
- *  3. User scans with PhonePe / GPay / any UPI app and pays
- *  4. User clicks "I've Paid":
- *       → AUTO-OPENS your (admin) WhatsApp with full payment details
- *       → User also gets a WhatsApp notification button for their own number
- *  5. You verify the screenshot manually and activate the feature
+ * Required env vars (set in Render → Environment):
+ *   VITE_UPI_ID          = yourphone@mbk   (or @ybl / @oksbi etc.)
+ *   VITE_MERCHANT_NAME   = Your Name
+ *   VITE_WHATSAPP_NO     = 91XXXXXXXXXX    (country code + number, no +)
  *
- * Setup: set VITE_UPI_ID, VITE_MERCHANT_NAME, VITE_WHATSAPP_NO in your .env file
+ * Optional:
+ *   VITE_MERCHANT_EMAIL  = your@email.com
+ *   VITE_MERCHANT_PHONE  = XXXXXXXXXX
  */
 
 import { useState, useEffect, useRef } from 'react'
@@ -45,14 +42,14 @@ import {
 import { getStoredUser } from '../lib/auth'
 
 // ─────────────────────────────────────────────────────────────
-// CONFIGURE YOUR PERSONAL UPI DETAILS HERE
-// Or set them in your .env file (recommended)
+// ALL VALUES FROM ENV VARS — no hardcoded fallbacks
+// Set in .env (local) or Render Environment dashboard (production)
 // ─────────────────────────────────────────────────────────────
-const UPI_ID        = import.meta.env.VITE_UPI_ID        || '6303089945@mbk'
-const MERCHANT_NAME = import.meta.env.VITE_MERCHANT_NAME || 'R SAI PRASAD'
-// YOUR personal WhatsApp (admin) — with country code, no + or spaces
-// India +91 6303089945
-const ADMIN_WHATSAPP = import.meta.env.VITE_WHATSAPP_NO || '916303089945'
+const UPI_ID         = import.meta.env.VITE_UPI_ID        || ''
+const MERCHANT_NAME  = import.meta.env.VITE_MERCHANT_NAME || 'MedAI Payments'
+const MERCHANT_EMAIL = import.meta.env.VITE_MERCHANT_EMAIL || ''
+const MERCHANT_PHONE = import.meta.env.VITE_MERCHANT_PHONE || ''
+const ADMIN_WHATSAPP = import.meta.env.VITE_WHATSAPP_NO   || ''
 
 // ─────────────────────────────────────────────────────────────
 // PAYMENT ITEMS
@@ -347,7 +344,22 @@ export default function Payments() {
     <div className="min-h-full bg-gradient-to-br from-slate-50 via-white to-purple-50/20 p-6">
       <div className="max-w-lg mx-auto">
 
-        {/* ── Header ── */}
+        {/* ── UPI not configured warning (admin only) ── */}
+        {!UPI_ID && (
+          <motion.div
+            initial={{ opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-5 flex items-start gap-3 bg-amber-50 border border-amber-200 rounded-2xl p-4"
+          >
+            <Shield className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+            <div>
+              <p className="text-sm font-bold text-amber-800">Payment not configured</p>
+              <p className="text-xs text-amber-700 mt-0.5">
+                Set <code className="bg-amber-100 px-1 rounded">VITE_UPI_ID</code> and <code className="bg-amber-100 px-1 rounded">VITE_WHATSAPP_NO</code> in your Render environment variables to enable payments.
+              </p>
+            </div>
+          </motion.div>
+        )}
         <motion.div initial={{ opacity: 0, y: -16 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
           {step !== 'select' && (
             <button
@@ -375,7 +387,7 @@ export default function Payments() {
                   : 'Payment Sent! 🎉'}
               </h1>
               <p className="text-sm text-slate-500">
-                {step === 'select' ? 'Mobiquick (@mbk) · PhonePe · GPay · Paytm'
+                {step === 'select' ? 'UPI · PhonePe · GPay · Paytm · Any wallet'
                   : step === 'pay' ? `Paying to: ${UPI_ID}`
                   : 'Send your screenshot to activate'}
               </p>
@@ -586,21 +598,38 @@ export default function Payments() {
                   <QRCanvas value={upiUrl} size={220} />
                 </div>
 
-                {/* UPI ID display — big & copyable */}
-                <div className="flex flex-col items-center gap-2 w-full bg-slate-50 rounded-2xl p-4 border border-slate-100">
-                  <div className="flex items-center gap-1.5 mb-0.5">
-                    <span className="text-[10px] text-slate-500 font-semibold uppercase tracking-wider">Mobiquick Wallet</span>
-                    <span className="text-[9px] font-bold bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded-full">@mbk</span>
+                {/* Merchant Profile Card — matches Mobiquick profile */}
+                <div className="w-full bg-slate-50 rounded-2xl border border-slate-100 overflow-hidden">
+                  {/* Profile row */}
+                  <div className="flex items-center gap-3 px-4 py-3 border-b border-slate-100">
+                    <div className="w-11 h-11 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-md flex-shrink-0">
+                      <span className="text-white font-extrabold text-base">R</span>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-bold text-slate-900 text-sm">{MERCHANT_NAME}</p>
+                      <p className="text-[11px] text-slate-500 truncate">{MERCHANT_EMAIL}</p>
+                      <p className="text-[11px] text-slate-500">{MERCHANT_PHONE}</p>
+                    </div>
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      {UPI_ID.includes('@') && (
+                        <span className="text-[9px] font-bold bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded-full">
+                          @{UPI_ID.split('@')[1]}
+                        </span>
+                      )}
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    {/* Mobiquick blue for the @mbk part */}
-                    <code className="text-lg font-black text-slate-900 tracking-wide">
-                      {UPI_ID.split('@')[0]}
-                      <span className="text-blue-600">@</span>
-                      <span className="text-blue-700">{UPI_ID.split('@')[1]}</span>
-                    </code>
+                  {/* UPI ID row */}
+                  <div className="flex items-center justify-between px-4 py-3">
+                    <div>
+                      <p className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider mb-0.5">UPI ID</p>
+                      <code className="text-sm font-black text-slate-900 tracking-wide">
+                        {UPI_ID.split('@')[0]}
+                        <span className="text-blue-600">@</span>
+                        <span className="text-blue-700">{UPI_ID.split('@')[1]}</span>
+                      </code>
+                    </div>
+                    <CopyButton text={UPI_ID} label="Copy" />
                   </div>
-                  <CopyButton text={UPI_ID} label="Copy UPI ID" />
                 </div>
 
                 {/* ── Direct App Buttons — PhonePe / GPay / Paytm ── */}

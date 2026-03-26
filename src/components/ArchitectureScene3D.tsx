@@ -22,12 +22,7 @@ import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import {
   RoundedBox,
   Text,
-  Float,
   Sparkles,
-  Trail,
-  Sphere,
-  Environment,
-  MeshTransmissionMaterial,
 } from '@react-three/drei'
 import { MotionConfig } from 'framer-motion'
 import { motion as motion2d } from 'framer-motion'
@@ -620,13 +615,13 @@ function Scene({
       <color attach="background" args={['#060b1a']} />
       <fog attach="fog" args={['#060b1a', 18, 35]} />
 
-      {/* Ambient + directional lighting */}
+      {/* Ambient + directional lighting — no external HDRI fetch */}
       <ambientLight intensity={0.15} color="#c7d2fe" />
-      <directionalLight position={[5, 8, 5]} intensity={0.4} color="#e0e7ff" castShadow />
-      <directionalLight position={[-5, -4, -3]} intensity={0.2} color="#93c5fd" />
-
-      {/* Environment for reflections */}
-      <Environment preset="city" background={false} />
+      {/* Hemisphere light simulates sky/ground IBL without fetching .hdr files */}
+      <hemisphereLight args={['#c7d2fe', '#1e1b4b', 0.55]} />
+      <directionalLight position={[5, 8, 5]} intensity={0.5} color="#e0e7ff" castShadow />
+      <directionalLight position={[-5, -4, -3]} intensity={0.25} color="#93c5fd" />
+      <directionalLight position={[0, -6, 4]} intensity={0.15} color="#6366f1" />
 
       {/* Camera controller */}
       <CameraController exploded={exploded} />

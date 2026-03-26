@@ -14,10 +14,12 @@ services:
     envVars:
       - key: PORT
         value: "10000"
+      - key: VITE_API_URL
+        value: ""             # Empty = relative URLs via Nginx proxy (required for Render)
       - key: JWT_SECRET
-        sync: false       # Render will prompt you to enter this
+        sync: false           # Render will prompt you to enter this
       - key: OPENAI_API_KEY
-        sync: false       # Render will prompt you to enter this
+        sync: false           # Render will prompt you to enter this
     disk:
       name: medai-data
       mountPath: /data

@@ -68,29 +68,41 @@ export default function Header({ user, userLocation }: Props) {
 
   return (
     <header className="h-[64px] md:h-[76px] glass-strong border-b border-white/40 flex items-center justify-between px-4 md:px-6 shrink-0 relative z-20">
-      <div>
-        <div className="flex items-center gap-2.5">
-          <h1 className="text-base md:text-lg font-extrabold text-slate-900 tracking-tight">{pageInfo.title}</h1>
-          {location.pathname === '/' && (
-            <motion.span
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="text-[9px] font-bold bg-gradient-to-r from-emerald-50 to-teal-50 text-emerald-600 px-2.5 py-0.5 rounded-full ring-1 ring-emerald-200/60 flex items-center gap-1"
-            >
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-              LIVE
-            </motion.span>
-          )}
-        </div>
-        <p className="text-[11px] text-slate-400 flex items-center gap-1.5 mt-0.5">
-          {location.pathname === '/' ? `${greeting}, ${user?.name || 'Patient'}` : pageInfo.subtitle}
-          {userLocation && (
-            <span className="inline-flex items-center gap-1 text-blue-600 font-semibold ml-1.5 bg-blue-50/80 px-2 py-0.5 rounded-full text-[10px] ring-1 ring-blue-100/50">
-              <MapPinned className="w-3 h-3" /> {userLocation}
-            </span>
-          )}
-        </p>
-      </div>
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={location.pathname}
+          initial={{ opacity: 0, y: 6 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -6 }}
+          transition={{ duration: 0.2, ease: 'easeOut' }}
+        >
+          <div className="flex items-center gap-2.5">
+            <h1 className="text-base md:text-lg font-extrabold text-slate-900 tracking-tight">{pageInfo.title}</h1>
+            {location.pathname === '/' && (
+              <motion.span
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="text-[9px] font-bold bg-gradient-to-r from-emerald-50 to-teal-50 text-emerald-600 px-2.5 py-0.5 rounded-full ring-1 ring-emerald-200/60 flex items-center gap-1"
+              >
+                <motion.span
+                  className="w-1.5 h-1.5 rounded-full bg-emerald-400"
+                  animate={{ opacity: [1, 0.4, 1] }}
+                  transition={{ duration: 1.5, repeat: Infinity }}
+                />
+                LIVE
+              </motion.span>
+            )}
+          </div>
+          <p className="text-[11px] text-slate-400 flex items-center gap-1.5 mt-0.5">
+            {location.pathname === '/' ? `${greeting}, ${user?.name || 'Patient'}` : pageInfo.subtitle}
+            {userLocation && (
+              <span className="inline-flex items-center gap-1 text-blue-600 font-semibold ml-1.5 bg-blue-50/80 px-2 py-0.5 rounded-full text-[10px] ring-1 ring-blue-100/50">
+                <MapPinned className="w-3 h-3" /> {userLocation}
+              </span>
+            )}
+          </p>
+        </motion.div>
+      </AnimatePresence>
 
       <div className="flex items-center gap-2">
         {/* Search — hidden on mobile */}

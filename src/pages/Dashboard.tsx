@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
 import {
@@ -186,54 +186,58 @@ export default function Dashboard({ userLocation = '' }: { userLocation?: string
         <div className="absolute top-1/3 right-0 w-[150px] h-[150px] sm:w-[300px] sm:h-[300px] bg-purple-100/10 rounded-full blur-3xl" />
       </div>
 
-      {/* Welcome Banner — Extreme Premium */}
+      {/* Welcome Banner — Ultra Premium */}
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
+        initial={{ opacity: 0, y: 24, scale: 0.98 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        transition={{ type: 'spring', stiffness: 220, damping: 24 }}
         className="relative rounded-2xl sm:rounded-3xl overflow-hidden shadow-xl sm:shadow-2xl shadow-emerald-500/10"
       >
-        {/* Animated gradient background */}
-        <div className="absolute inset-0 bg-gradient-to-r from-emerald-600 via-teal-500 to-blue-600 animated-border" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(255,255,255,0.15),transparent_50%)]" />
-        <div className="absolute top-0 right-0 w-96 h-96 bg-white/5 rounded-full -translate-y-1/2 translate-x-1/4 blur-2xl" />
-        <div className="absolute bottom-0 left-0 w-80 h-80 bg-white/5 rounded-full translate-y-1/2 -translate-x-1/4 blur-2xl" />
-        <div className="absolute inset-0 dot-pattern opacity-[0.03]" />
+        {/* Hero animated gradient */}
+        <div className="absolute inset-0 hero-gradient" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(255,255,255,0.18),transparent_55%)]" />
+        <div className="absolute inset-0 dot-pattern opacity-[0.04]" />
 
-        {/* Floating orbs */}
-        {[...Array(6)].map((_, i) => (
+        {/* Animated particle orbs */}
+        {[...Array(8)].map((_, i) => (
           <motion.div
             key={i}
             className="absolute rounded-full bg-white/10"
             animate={{
-              x: [0, Math.random() * 100 - 50],
-              y: [0, Math.random() * 60 - 30],
-              opacity: [0.05, 0.15, 0.05],
-              scale: [1, 1.2, 1],
+              x: [0, (i % 2 === 0 ? 1 : -1) * (20 + i * 8)],
+              y: [0, (i % 3 === 0 ? -1 : 1) * (15 + i * 5)],
+              opacity: [0.06, 0.18, 0.06],
+              scale: [1, 1.3, 1],
             }}
-            transition={{ duration: 5 + i * 1.5, repeat: Infinity, ease: 'easeInOut' }}
+            transition={{ duration: 4 + i * 1.2, repeat: Infinity, ease: 'easeInOut', repeatType: 'reverse' }}
             style={{
-              left: `${10 + i * 16}%`,
-              top: `${15 + i * 10}%`,
-              width: `${12 + i * 4}px`,
-              height: `${12 + i * 4}px`,
+              left: `${8 + i * 11}%`,
+              top: `${10 + (i % 4) * 20}%`,
+              width: `${14 + i * 5}px`,
+              height: `${14 + i * 5}px`,
             }}
           />
         ))}
 
-        <div className="relative z-10 p-8 text-white">
-          <div className="flex items-center gap-3 mb-4">
+        <div className="relative z-10 p-6 sm:p-8 text-white">
+          <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.1 }}
+            className="flex flex-wrap items-center gap-2 mb-4"
+          >
             <motion.div
-              animate={{ rotate: [0, 15, -15, 0] }}
+              animate={{ rotate: [0, 18, -18, 0], scale: [1, 1.1, 1] }}
               transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
             >
               <Sparkles className="w-5 h-5 text-emerald-200" />
             </motion.div>
             <span className="text-[10px] font-bold text-emerald-100 tracking-[0.15em] uppercase">AI-Powered Healthcare Platform</span>
             {backendOnline === true && (
-              <span className="ml-2 flex items-center gap-1.5 text-[10px] font-bold bg-white/15 backdrop-blur-sm px-3 py-1 rounded-full border border-white/10">
+              <span className="flex items-center gap-1.5 text-[10px] font-bold bg-white/15 backdrop-blur-sm px-3 py-1 rounded-full border border-white/10">
                 <motion.span
                   className="w-1.5 h-1.5 rounded-full bg-emerald-300"
-                  animate={{ scale: [1, 1.3, 1] }}
+                  animate={{ scale: [1, 1.5, 1], opacity: [0.7, 1, 0.7] }}
                   transition={{ duration: 1.5, repeat: Infinity }}
                 />
                 Backend Online
@@ -242,40 +246,66 @@ export default function Dashboard({ userLocation = '' }: { userLocation?: string
             <span className="flex items-center gap-0.5 text-[10px] font-bold bg-gradient-to-r from-amber-400/20 to-orange-400/20 backdrop-blur-sm px-2.5 py-1 rounded-full border border-amber-300/20">
               <Crown className="w-2.5 h-2.5 text-amber-300" /> Premium
             </span>
-          </div>
+          </motion.div>
 
-          <h2 className="text-3xl font-black tracking-tight">{getGreeting()}, {user?.name || 'Patient'}</h2>
-          <p className="text-sm text-emerald-100/90 mt-2 max-w-lg leading-relaxed">
-            Your personal AI health assistant powered by GPT-4o, LangChain, and RAG. Describe symptoms, upload reports, and get instant medical insights.
+          <motion.h2
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.15, type: 'spring', stiffness: 200 }}
+            className="text-3xl sm:text-4xl font-black tracking-tight"
+          >
+            {getGreeting()},{' '}
+            <span className="text-white/90">{user?.name || 'Patient'}</span>
+          </motion.h2>
+
+          <motion.p
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="text-sm text-emerald-100/90 mt-2 max-w-lg leading-relaxed"
+          >
+            Your personal AI health assistant powered by GPT-4o, LangChain, and RAG.
             {userLocation && (
-              <span className="inline-flex items-center gap-1 ml-1.5 font-bold text-white bg-white/10 px-2 py-0.5 rounded-full text-xs">
+              <motion.span
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                transition={{ delay: 0.3 }}
+                className="inline-flex items-center gap-1 ml-1.5 font-bold text-white bg-white/10 px-2 py-0.5 rounded-full text-xs"
+              >
                 <MapPin className="w-3 h-3" /> {userLocation}
-              </span>
+              </motion.span>
             )}
-          </p>
+          </motion.p>
 
-          <div className="flex items-center gap-3 mt-6">
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.25 }}
+            className="flex flex-wrap items-center gap-3 mt-6"
+          >
             <motion.button
-              whileHover={{ scale: 1.03, y: -1 }}
+              whileHover={{ scale: 1.04, y: -2, boxShadow: '0 12px 30px rgba(0,0,0,0.15)' }}
               whileTap={{ scale: 0.97 }}
               onClick={() => navigate('/ai-doctor')}
-              className="flex items-center gap-2.5 px-7 py-3 bg-white/20 hover:bg-white/30 backdrop-blur-sm rounded-xl text-sm font-bold transition-all border border-white/15 shadow-lg shadow-white/5 hover:shadow-xl"
+              className="flex items-center gap-2.5 px-7 py-3 bg-white/20 hover:bg-white/30 backdrop-blur-sm rounded-xl text-sm font-bold transition-all border border-white/15 shadow-lg shadow-white/5 ripple-btn"
             >
-              <Brain className="w-4.5 h-4.5" />
+              <motion.div animate={{ rotate: [0, 10, -10, 0] }} transition={{ duration: 2.5, repeat: Infinity }}>
+                <Brain className="w-4 h-4" />
+              </motion.div>
               Start AI Consultation
               <ArrowRight className="w-4 h-4 ml-1" />
             </motion.button>
             {userLocation && (
               <motion.button
-                whileHover={{ scale: 1.03, y: -1 }}
+                whileHover={{ scale: 1.04, y: -2 }}
                 whileTap={{ scale: 0.97 }}
                 onClick={() => navigate('/hospitals')}
-                className="flex items-center gap-2 px-5 py-3 bg-white/10 hover:bg-white/20 backdrop-blur-sm rounded-xl text-sm font-medium transition-all border border-white/5"
+                className="flex items-center gap-2 px-5 py-3 bg-white/10 hover:bg-white/20 backdrop-blur-sm rounded-xl text-sm font-medium transition-all border border-white/5 ripple-btn"
               >
                 <Building2 className="w-4 h-4" /> Hospitals near {userLocation}
               </motion.button>
             )}
-          </div>
+          </motion.div>
         </div>
       </motion.div>
 
@@ -323,41 +353,62 @@ export default function Dashboard({ userLocation = '' }: { userLocation?: string
         )}
       </AnimatePresence>
 
-      {/* Quick Actions — Premium Glassmorphism Cards */}
+      {/* Quick Actions — Pro-Level Animated Cards */}
       <div className="grid grid-cols-2 xs:grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-4">
         {quickActions.map((action, i) => (
           <motion.button
             key={action.label}
-            initial={{ opacity: 0, y: 25 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: i * 0.08, type: 'spring', stiffness: 200 }}
-            whileHover={{ y: -6, scale: 1.02 }}
-            whileTap={{ scale: 0.97 }}
+            initial={{ opacity: 0, y: 30, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            transition={{ delay: i * 0.09, type: 'spring', stiffness: 260, damping: 22 }}
+            whileHover={{ y: -8, scale: 1.03, rotateX: 3, rotateY: -3 }}
+            whileTap={{ scale: 0.95, rotateX: 0, rotateY: 0 }}
             onClick={() => navigate(action.path)}
-            className="glass-card rounded-2xl p-5 text-left transition-all duration-500 group relative overflow-hidden"
+            className="glass-card rounded-2xl p-5 text-left transition-all duration-400 group relative overflow-hidden ripple-btn tilt-card"
+            style={{ transformStyle: 'preserve-3d' }}
           >
-            {/* Hover gradient */}
-            <div className={`absolute inset-0 bg-gradient-to-br ${action.gradient} opacity-0 group-hover:opacity-[0.04] transition-opacity duration-500`} />
-            <div className="absolute top-0 right-0 w-28 h-28 bg-gradient-to-br from-white/5 to-transparent rounded-full -translate-y-1/2 translate-x-1/2" />
+            {/* Gradient overlay on hover */}
+            <div className={`absolute inset-0 bg-gradient-to-br ${action.gradient} opacity-0 group-hover:opacity-[0.06] transition-opacity duration-500 rounded-2xl`} />
+            {/* Glowing top-right orb */}
+            <div className={`absolute -top-6 -right-6 w-20 h-20 bg-gradient-to-br ${action.gradient} rounded-full blur-2xl opacity-0 group-hover:opacity-20 transition-opacity duration-500`} />
+            {/* Bottom accent line */}
+            <motion.div
+              className={`absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r ${action.gradient} opacity-0 group-hover:opacity-100`}
+              initial={{ scaleX: 0 }}
+              whileHover={{ scaleX: 1 }}
+              transition={{ duration: 0.3 }}
+            />
 
             <div className="relative z-10">
-              <div className={`w-12 h-12 rounded-2xl bg-gradient-to-br ${action.gradient} flex items-center justify-center shadow-xl ${action.glow} mb-3.5 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300`}>
-                <action.icon className="w-5.5 h-5.5 text-white" />
-              </div>
+              <motion.div
+                whileHover={{ scale: 1.15, rotate: 8 }}
+                transition={{ type: 'spring', stiffness: 400, damping: 18 }}
+                className={`w-12 h-12 rounded-2xl bg-gradient-to-br ${action.gradient} flex items-center justify-center shadow-xl ${action.glow} mb-3.5`}
+              >
+                <action.icon className="w-[22px] h-[22px] text-white" />
+              </motion.div>
               <p className="text-sm font-black text-slate-900 group-hover:text-slate-800">{action.label}</p>
               <p className="text-[11px] text-slate-400 mt-0.5 font-medium">{action.desc}</p>
             </div>
-            <ChevronRight className="w-4 h-4 text-slate-300 absolute bottom-4 right-4 opacity-0 group-hover:opacity-100 group-hover:translate-x-0 -translate-x-2 transition-all duration-300" />
+            <motion.div
+              className="absolute bottom-4 right-4 opacity-0 group-hover:opacity-100"
+              initial={{ x: -6, opacity: 0 }}
+              whileHover={{ x: 0, opacity: 1 }}
+              transition={{ duration: 0.2 }}
+            >
+              <ChevronRight className="w-4 h-4 text-slate-300" />
+            </motion.div>
           </motion.button>
         ))}
       </div>
 
-      {/* Stats Cards — Premium Animated */}
+      {/* Stats Cards — Pro Animated with count-up */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4">
         {[
           {
             title: 'Health Score',
-            value: healthScore !== null ? `${healthScore}` : '—',
+            value: healthScore !== null ? healthScore : null,
+            display: healthScore !== null ? `${healthScore}` : '—',
             suffix: healthScore !== null ? '/100' : '',
             subtitle: healthScore !== null
               ? healthScore >= 80 ? 'Excellent condition' : healthScore >= 60 ? 'Good condition' : 'Needs attention'
@@ -368,7 +419,8 @@ export default function Dashboard({ userLocation = '' }: { userLocation?: string
           },
           {
             title: 'Reports Uploaded',
-            value: String(stats.totalReports),
+            value: stats.totalReports,
+            display: String(stats.totalReports),
             suffix: '',
             subtitle: 'Medical reports analyzed',
             icon: FileText,
@@ -377,7 +429,8 @@ export default function Dashboard({ userLocation = '' }: { userLocation?: string
           },
           {
             title: 'Risk Level',
-            value: riskLevel || '—',
+            value: null,
+            display: riskLevel || '—',
             suffix: '',
             subtitle: riskLevel ? 'Based on your reports' : 'No reports analyzed yet',
             icon: Shield,
@@ -386,7 +439,8 @@ export default function Dashboard({ userLocation = '' }: { userLocation?: string
           },
           {
             title: 'AI Consultations',
-            value: String(stats.totalChats),
+            value: stats.totalChats,
+            display: String(stats.totalChats),
             suffix: '',
             subtitle: `${stats.totalSearches} searches made`,
             icon: Clock,
@@ -394,41 +448,56 @@ export default function Dashboard({ userLocation = '' }: { userLocation?: string
             trend: stats.totalChats > 0 ? 'Keep consulting MedAI' : 'Start your first consultation',
           },
         ].map((card, i) => {
-          const colorClasses: Record<string, { text: string; icon: string; border: string; glow: string; gradient: string; trendColor: string }> = {
-            emerald: { text: 'text-emerald-700', icon: 'from-emerald-500 to-emerald-600', border: 'border-emerald-100/40', glow: 'shadow-emerald-500/10', gradient: 'from-emerald-50/80 to-white', trendColor: 'text-emerald-600' },
-            blue: { text: 'text-blue-700', icon: 'from-blue-500 to-blue-600', border: 'border-blue-100/40', glow: 'shadow-blue-500/10', gradient: 'from-blue-50/80 to-white', trendColor: 'text-blue-600' },
-            amber: { text: 'text-amber-700', icon: 'from-amber-500 to-amber-600', border: 'border-amber-100/40', glow: 'shadow-amber-500/10', gradient: 'from-amber-50/80 to-white', trendColor: 'text-amber-600' },
-            purple: { text: 'text-purple-700', icon: 'from-purple-500 to-purple-600', border: 'border-purple-100/40', glow: 'shadow-purple-500/10', gradient: 'from-purple-50/80 to-white', trendColor: 'text-purple-600' },
+          const colorClasses: Record<string, { text: string; icon: string; border: string; glow: string; gradient: string; trendColor: string; ring: string }> = {
+            emerald: { text: 'text-emerald-700', icon: 'from-emerald-500 to-emerald-600', border: 'border-emerald-100/40', glow: 'shadow-emerald-500/10', gradient: 'from-emerald-50/80 to-white', trendColor: 'text-emerald-600', ring: 'ring-emerald-100/50' },
+            blue:    { text: 'text-blue-700',    icon: 'from-blue-500 to-blue-600',       border: 'border-blue-100/40',    glow: 'shadow-blue-500/10',    gradient: 'from-blue-50/80 to-white',    trendColor: 'text-blue-600',    ring: 'ring-blue-100/50' },
+            amber:   { text: 'text-amber-700',   icon: 'from-amber-500 to-amber-600',     border: 'border-amber-100/40',   glow: 'shadow-amber-500/10',   gradient: 'from-amber-50/80 to-white',   trendColor: 'text-amber-600',   ring: 'ring-amber-100/50' },
+            purple:  { text: 'text-purple-700',  icon: 'from-purple-500 to-purple-600',   border: 'border-purple-100/40',  glow: 'shadow-purple-500/10',  gradient: 'from-purple-50/80 to-white',  trendColor: 'text-purple-600',  ring: 'ring-purple-100/50' },
           }
           const c = colorClasses[card.color]
           return (
             <motion.div
               key={card.title}
-              initial={{ opacity: 0, y: 25 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1 + i * 0.08, type: 'spring', stiffness: 200 }}
-              whileHover={{ y: -4, scale: 1.01 }}
-              className={`bg-gradient-to-br ${c.gradient} backdrop-blur-xl rounded-2xl border ${c.border} p-6 hover:shadow-xl ${c.glow} transition-all duration-500 relative overflow-hidden group`}
+              initial={{ opacity: 0, y: 28, scale: 0.96 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              transition={{ delay: 0.12 + i * 0.09, type: 'spring', stiffness: 240, damping: 22 }}
+              whileHover={{ y: -5, scale: 1.02 }}
+              className={`bg-gradient-to-br ${c.gradient} backdrop-blur-xl rounded-2xl border ${c.border} p-6 hover:shadow-xl ${c.glow} transition-all duration-500 relative overflow-hidden group cursor-default`}
             >
-              <div className="absolute top-0 right-0 w-36 h-36 bg-gradient-to-br from-white/30 to-transparent rounded-full -translate-y-1/2 translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+              {/* Glow orb on hover */}
+              <div className={`absolute -top-10 -right-10 w-32 h-32 bg-gradient-to-br ${c.icon} rounded-full blur-3xl opacity-0 group-hover:opacity-10 transition-all duration-700`} />
+
               <div className="flex items-start justify-between relative z-10">
                 <div>
                   <p className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">{card.title}</p>
-                  <p className={`text-3xl font-black mt-2 ${c.text}`}>
-                    {card.value}
+                  <motion.p
+                    key={card.display}
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ type: 'spring', stiffness: 300 }}
+                    className={`text-3xl font-black mt-2 ${c.text}`}
+                  >
+                    {card.display}
                     {card.suffix && <span className="text-base font-semibold text-slate-400 ml-0.5">{card.suffix}</span>}
-                  </p>
+                  </motion.p>
                   <p className="text-[11px] text-slate-400 mt-1 font-medium">{card.subtitle}</p>
                 </div>
                 <motion.div
-                  whileHover={{ scale: 1.1, rotate: 5 }}
+                  whileHover={{ scale: 1.12, rotate: 8 }}
+                  transition={{ type: 'spring', stiffness: 400 }}
                   className={`w-12 h-12 bg-gradient-to-br ${c.icon} rounded-xl flex items-center justify-center shadow-xl group-hover:shadow-2xl transition-all duration-300`}
                 >
                   <card.icon className="w-6 h-6 text-white" />
                 </motion.div>
               </div>
               <div className="mt-4 pt-3 border-t border-slate-100/60 relative z-10">
-                <span className={`text-xs font-bold ${c.trendColor}`}>{card.trend}</span>
+                <motion.span
+                  animate={{ opacity: [0.7, 1, 0.7] }}
+                  transition={{ duration: 3, repeat: Infinity }}
+                  className={`text-xs font-bold ${c.trendColor}`}
+                >
+                  {card.trend}
+                </motion.span>
               </div>
             </motion.div>
           )

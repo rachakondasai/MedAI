@@ -3,123 +3,185 @@ import { NavLink, useLocation } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   LayoutDashboard, Bot, FileText, Building2, Pill,
-  Clock, BookOpen, Settings, Shield,
+  Clock, BookOpen, Settings, Shield, X, Sparkles,
+  ChevronRight, Heart, Brain, GraduationCap,
 } from 'lucide-react'
 import type { AuthUser } from '../lib/auth'
 
 const NAV_ITEMS = [
-  { to: '/',          icon: LayoutDashboard, label: 'Home'     },
-  { to: '/ai-doctor', icon: Bot,             label: 'AI Doctor', highlight: true },
-  { to: '/reports',   icon: FileText,        label: 'Reports'  },
-  { to: '/hospitals', icon: Building2,       label: 'Hospitals'},
-  { to: '/medicines', icon: Pill,            label: 'Medicines'},
+  { to: '/',          icon: LayoutDashboard, label: 'Home',     color: 'from-violet-500 to-purple-600',  dot: 'bg-violet-400' },
+  { to: '/reports',   icon: FileText,        label: 'Reports',  color: 'from-blue-500 to-indigo-600',    dot: 'bg-blue-400' },
+  { to: '/ai-doctor', icon: Brain,           label: 'AI',       color: 'from-emerald-500 to-teal-600',  dot: 'bg-emerald-400', center: true },
+  { to: '/hospitals', icon: Building2,       label: 'Hospitals',color: 'from-rose-500 to-pink-600',     dot: 'bg-rose-400' },
+  { to: '/medicines', icon: Pill,            label: 'Pharmacy', color: 'from-amber-500 to-orange-600',  dot: 'bg-amber-400' },
 ]
 
 const MORE_ITEMS = [
-  { to: '/learn',    icon: BookOpen, label: 'Learn'   },
-  { to: '/history',  icon: Clock,    label: 'History' },
-  { to: '/settings', icon: Settings, label: 'Settings'},
+  { to: '/learn',    icon: GraduationCap, label: 'Learning Lab', desc: 'AI-powered courses',      color: 'from-violet-500 to-purple-600' },
+  { to: '/history',  icon: Clock,         label: 'History',      desc: 'Past consultations',      color: 'from-blue-500 to-indigo-600' },
+  { to: '/settings', icon: Settings,      label: 'Settings',     desc: 'Account & preferences',  color: 'from-slate-500 to-slate-600' },
 ]
 
-interface Props {
-  user?: AuthUser | null
-}
+interface Props { user?: AuthUser | null }
 
 export default function MobileNav({ user }: Props) {
   const location = useLocation()
+  const [showMore, setShowMore] = useState(false)
+  const [tappedIndex, setTappedIndex] = useState<number | null>(null)
 
   const allMore = user?.role === 'admin'
-    ? [...MORE_ITEMS, { to: '/admin', icon: Shield, label: 'Admin' }]
+    ? [...MORE_ITEMS, { to: '/admin', icon: Shield, label: 'Admin Panel', desc: 'Manage users & system', color: 'from-red-500 to-rose-600' }]
     : MORE_ITEMS
 
-  // Show "More" as active if current path is in the more list
   const moreActive = allMore.some(i => location.pathname === i.to)
 
-  const [showMore, setShowMore] = useState(false)
+  const handleTap = (index: number) => {
+    setTappedIndex(index)
+    setTimeout(() => setTappedIndex(null), 600)
+  }
 
   return (
     <>
-      {/* More drawer overlay */}
+      {/* Backdrop */}
       <AnimatePresence>
         {showMore && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-40 bg-black/30 backdrop-blur-sm"
+            transition={{ duration: 0.2 }}
+            className="fixed inset-0 z-40 bg-black/40 backdrop-blur-md"
             onClick={() => setShowMore(false)}
           />
         )}
       </AnimatePresence>
 
-      {/* More drawer */}
+      {/* More Drawer */}
       <AnimatePresence>
         {showMore && (
           <motion.div
-            initial={{ y: '100%' }}
-            animate={{ y: 0 }}
-            exit={{ y: '100%' }}
-            transition={{ type: 'spring', stiffness: 400, damping: 35 }}
-            className="fixed bottom-[72px] left-0 right-0 z-50 bg-white/95 backdrop-blur-xl border-t border-slate-200/60 rounded-t-3xl shadow-2xl px-4 py-4"
+            initial={{ y: '100%', opacity: 0.6 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: '100%', opacity: 0 }}
+            transition={{ type: 'spring', stiffness: 380, damping: 38 }}
+            className="fixed bottom-[72px] left-0 right-0 z-50 bg-white/98 backdrop-blur-2xl rounded-t-[2rem] shadow-[0_-20px_60px_-10px_rgba(0,0,0,0.18)]"
+            style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
           >
-            <div className="w-10 h-1 bg-slate-200 rounded-full mx-auto mb-4" />
-            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-2 mb-3">More</p>
-            <div className="grid grid-cols-4 gap-2">
-              {allMore.map(item => {
+            <div className="flex justify-center pt-3 pb-1">
+              <div className="w-10 h-1 bg-slate-200 rounded-full" />
+            </div>
+            <div className="flex items-center justify-between px-5 py-3 border-b border-slate-100">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-lg shadow-emerald-500/25">
+                  <Sparkles className="w-4 h-4 text-white" />
+                </div>
+                <div>
+                  <p className="text-sm font-bold text-slate-900">More Features</p>
+                  <p className="text-[10px] text-slate-400">All MedAI tools</p>
+                </div>
+              </div>
+              <motion.button
+                whileTap={{ scale: 0.9, rotate: 90 }}
+                onClick={() => setShowMore(false)}
+                className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center"
+              >
+                <X className="w-4 h-4 text-slate-500" />
+              </motion.button>
+            </div>
+
+            <div className="px-4 py-4 space-y-2">
+              {allMore.map((item, idx) => {
                 const isActive = location.pathname === item.to
                 return (
-                  <NavLink
+                  <motion.div
                     key={item.to}
-                    to={item.to}
-                    onClick={() => setShowMore(false)}
-                    className="flex flex-col items-center gap-1.5 py-3 px-2 rounded-2xl transition-all"
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: idx * 0.06, type: 'spring', stiffness: 300, damping: 28 }}
                   >
-                    <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all ${
-                      isActive
-                        ? 'bg-gradient-to-br from-emerald-500 to-teal-600 shadow-lg shadow-emerald-500/25'
-                        : 'bg-slate-100'
-                    }`}>
-                      <item.icon className={`w-5 h-5 ${isActive ? 'text-white' : 'text-slate-500'}`} />
-                    </div>
-                    <span className={`text-[10px] font-semibold ${isActive ? 'text-emerald-600' : 'text-slate-500'}`}>
-                      {item.label}
-                    </span>
-                  </NavLink>
+                    <NavLink
+                      to={item.to}
+                      onClick={() => setShowMore(false)}
+                      className={`flex items-center gap-3.5 p-3.5 rounded-2xl transition-all ${isActive ? 'bg-slate-50 ring-1 ring-slate-200' : ''}`}
+                    >
+                      <motion.div
+                        whileTap={{ scale: 0.88 }}
+                        className={`w-12 h-12 rounded-2xl bg-gradient-to-br ${item.color} flex items-center justify-center shadow-lg flex-shrink-0`}
+                      >
+                        <item.icon className="w-5 h-5 text-white" />
+                      </motion.div>
+                      <div className="flex-1 min-w-0">
+                        <p className={`text-sm font-bold ${isActive ? 'text-slate-900' : 'text-slate-700'}`}>{item.label}</p>
+                        <p className="text-[11px] text-slate-400 truncate">{item.desc}</p>
+                      </div>
+                      <motion.div animate={isActive ? { x: [0, 3, 0] } : {}} transition={{ repeat: Infinity, duration: 1.5 }}>
+                        <ChevronRight className={`w-4 h-4 ${isActive ? 'text-emerald-500' : 'text-slate-300'}`} />
+                      </motion.div>
+                    </NavLink>
+                  </motion.div>
                 )
               })}
+            </div>
+
+            <div className="px-5 pb-4 pt-1 flex items-center justify-center gap-1.5">
+              <Heart className="w-3 h-3 text-rose-400" />
+              <p className="text-[10px] text-slate-400 font-medium">Powered by GPT-4o & LangChain</p>
             </div>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* Bottom nav bar */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/90 backdrop-blur-xl border-t border-slate-200/60 shadow-[0_-4px_24px_rgba(0,0,0,0.08)]">
-        <div className="flex items-center justify-around px-2 pb-[env(safe-area-inset-bottom)]">
-          {NAV_ITEMS.map(item => {
-            const isActive = item.to === '/' ? location.pathname === '/' : location.pathname.startsWith(item.to)
+      {/* Bottom Nav Bar */}
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 mobile-nav-bar">
+        <div
+          className="flex items-center justify-around px-1"
+          style={{ paddingBottom: 'max(env(safe-area-inset-bottom), 8px)', paddingTop: '6px' }}
+        >
+          {NAV_ITEMS.map((item, idx) => {
+            const isActive = item.to === '/'
+              ? location.pathname === '/'
+              : location.pathname.startsWith(item.to)
+            const isTapped = tappedIndex === idx
 
-            if (item.highlight) {
-              // AI Doctor — special pill button in center
+            if (item.center) {
               return (
-                <NavLink
-                  key={item.to}
-                  to={item.to}
-                  className="flex flex-col items-center -mt-5"
-                >
-                  <motion.div
-                    whileTap={{ scale: 0.92 }}
-                    className={`w-14 h-14 rounded-2xl flex items-center justify-center shadow-xl transition-all ${
-                      isActive
-                        ? 'bg-gradient-to-br from-blue-500 to-indigo-600 shadow-blue-500/30'
-                        : 'bg-gradient-to-br from-emerald-500 to-teal-600 shadow-emerald-500/30'
-                    }`}
+                <div key={item.to} className="flex flex-col items-center relative -mt-4">
+                  <NavLink
+                    to={item.to}
+                    onClick={() => handleTap(idx)}
+                    className="flex flex-col items-center"
                   >
-                    <item.icon className="w-6 h-6 text-white" />
-                  </motion.div>
-                  <span className={`text-[9px] font-bold mt-1 ${isActive ? 'text-blue-600' : 'text-emerald-600'}`}>
-                    {item.label}
-                  </span>
-                </NavLink>
+                    {isActive && (
+                      <motion.div
+                        className="absolute inset-0 rounded-2xl bg-emerald-400/30"
+                        animate={{ scale: [1, 1.4, 1], opacity: [0.4, 0, 0.4] }}
+                        transition={{ duration: 2, repeat: Infinity }}
+                        style={{ margin: '-4px' }}
+                      />
+                    )}
+                    <motion.div
+                      whileTap={{ scale: 0.88 }}
+                      animate={isTapped ? { y: [-6, 0] } : {}}
+                      transition={{ type: 'spring', stiffness: 600, damping: 18 }}
+                      className={`w-[54px] h-[54px] rounded-2xl flex items-center justify-center shadow-xl relative z-10 transition-all duration-300 ${
+                        isActive
+                          ? 'bg-gradient-to-br from-emerald-400 to-teal-600 shadow-emerald-500/40'
+                          : 'bg-gradient-to-br from-emerald-500 to-teal-600 shadow-emerald-500/30'
+                      }`}
+                    >
+                      <div className="absolute inset-0 rounded-2xl overflow-hidden">
+                        <div className="absolute inset-0 shimmer-premium opacity-50" />
+                      </div>
+                      <item.icon className="w-6 h-6 text-white relative z-10" />
+                    </motion.div>
+                    <motion.span
+                      animate={{ color: isActive ? '#059669' : '#94a3b8' }}
+                      className="text-[9px] font-extrabold mt-1 tracking-wide"
+                    >
+                      {item.label}
+                    </motion.span>
+                  </NavLink>
+                </div>
               )
             }
 
@@ -128,53 +190,107 @@ export default function MobileNav({ user }: Props) {
                 key={item.to}
                 to={item.to}
                 end={item.to === '/'}
-                className="flex flex-col items-center py-2 px-3 min-w-[52px] relative"
+                onClick={() => handleTap(idx)}
+                className="flex flex-col items-center py-1 px-2 min-w-[56px] relative group"
               >
-                <motion.div whileTap={{ scale: 0.9 }} className="relative">
-                  <div className={`w-6 h-6 flex items-center justify-center transition-all`}>
-                    <item.icon className={`w-5 h-5 transition-all ${isActive ? 'text-emerald-600' : 'text-slate-400'}`} />
-                  </div>
-                  {isActive && (
-                    <motion.div
-                      layoutId="mobileNavDot"
-                      className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full bg-emerald-500"
-                    />
-                  )}
-                </motion.div>
-                <span className={`text-[9px] font-semibold mt-1.5 transition-colors ${isActive ? 'text-emerald-600' : 'text-slate-400'}`}>
+                <div className="relative flex flex-col items-center">
+                  <AnimatePresence>
+                    {isActive && (
+                      <motion.div
+                        layoutId="mobileNavPill"
+                        initial={{ opacity: 0, scale: 0.7 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.7 }}
+                        transition={{ type: 'spring', stiffness: 500, damping: 35 }}
+                        className={`absolute -inset-1.5 rounded-2xl bg-gradient-to-br ${item.color} opacity-10`}
+                      />
+                    )}
+                  </AnimatePresence>
+                  <motion.div
+                    whileTap={{ scale: 0.8, rotate: -5 }}
+                    animate={isTapped ? { y: [0, -8, 0], rotate: [0, -10, 10, 0] } : {}}
+                    transition={{ type: 'spring', stiffness: 500, damping: 22 }}
+                    className="relative z-10 w-7 h-7 flex items-center justify-center"
+                  >
+                    <item.icon className={`w-[22px] h-[22px] transition-all duration-300 ${isActive ? 'text-slate-900' : 'text-slate-400 group-hover:text-slate-600'}`} />
+                  </motion.div>
+                  <AnimatePresence>
+                    {isActive && (
+                      <motion.div
+                        initial={{ scale: 0, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        exit={{ scale: 0, opacity: 0 }}
+                        transition={{ type: 'spring', stiffness: 600, damping: 20 }}
+                        className={`w-1 h-1 rounded-full mt-0.5 ${item.dot}`}
+                      />
+                    )}
+                  </AnimatePresence>
+                </div>
+                <motion.span
+                  animate={{ color: isActive ? '#0f172a' : '#94a3b8', fontWeight: isActive ? 700 : 500 }}
+                  className="text-[9px] mt-0.5 leading-none"
+                >
                   {item.label}
-                </span>
+                </motion.span>
               </NavLink>
             )
           })}
 
-          {/* More button */}
+          {/* More Button */}
           <button
-            onClick={() => setShowMore(v => !v)}
-            className="flex flex-col items-center py-2 px-3 min-w-[52px] relative"
+            onClick={() => { setShowMore(v => !v); handleTap(99) }}
+            className="flex flex-col items-center py-1 px-2 min-w-[56px] relative group"
           >
-            <motion.div whileTap={{ scale: 0.9 }} className="relative">
-              <div className="w-6 h-6 flex items-center justify-center">
-                <div className="flex flex-col gap-[3px] items-center">
-                  <div className={`w-4 h-[2px] rounded-full transition-colors ${moreActive || showMore ? 'bg-emerald-500' : 'bg-slate-400'}`} />
-                  <div className={`w-3 h-[2px] rounded-full transition-colors ${moreActive || showMore ? 'bg-emerald-500' : 'bg-slate-400'}`} />
+            <div className="relative flex flex-col items-center">
+              <AnimatePresence>
+                {moreActive && (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.7 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.7 }}
+                    className="absolute -inset-1.5 rounded-2xl bg-slate-400/10"
+                  />
+                )}
+              </AnimatePresence>
+              <motion.div
+                animate={showMore ? { rotate: 45, scale: 1.1 } : { rotate: 0, scale: 1 }}
+                transition={{ type: 'spring', stiffness: 400, damping: 22 }}
+                whileTap={{ scale: 0.8 }}
+                className="relative z-10 w-7 h-7 flex items-center justify-center"
+              >
+                <div className="flex flex-col gap-[3.5px] items-center">
+                  {[0, 1, 2].map(i => (
+                    <motion.div
+                      key={i}
+                      animate={showMore ? {
+                        rotate: i === 0 ? 45 : i === 1 ? 0 : -45,
+                        y: i === 0 ? 7 : i === 1 ? 0 : -7,
+                        opacity: i === 1 ? 0 : 1,
+                      } : { rotate: 0, y: 0, opacity: 1 }}
+                      transition={{ type: 'spring', stiffness: 400, damping: 22 }}
+                      className={`h-[2px] rounded-full transition-all ${moreActive ? 'bg-slate-800' : 'bg-slate-400'}`}
+                      style={{ width: i === 1 ? '12px' : '16px' }}
+                    />
+                  ))}
                 </div>
-              </div>
-              {(moreActive || showMore) && (
+              </motion.div>
+              {moreActive && (
                 <motion.div
-                  layoutId="mobileNavDot"
-                  className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full bg-emerald-500"
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  className="w-1 h-1 rounded-full mt-0.5 bg-slate-400"
                 />
               )}
-            </motion.div>
-            <span className={`text-[9px] font-semibold mt-1.5 transition-colors ${moreActive || showMore ? 'text-emerald-600' : 'text-slate-400'}`}>
+            </div>
+            <motion.span
+              animate={{ color: moreActive || showMore ? '#0f172a' : '#94a3b8' }}
+              className="text-[9px] mt-0.5 leading-none font-medium"
+            >
               More
-            </span>
+            </motion.span>
           </button>
         </div>
       </nav>
     </>
   )
 }
-
-// Need to import useState

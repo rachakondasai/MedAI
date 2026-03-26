@@ -118,7 +118,7 @@ export default function Sidebar({ user, onLogout, show, onClose }: Props) {
             {/* Navigation */}
             <nav className="flex-1 py-5 px-3 space-y-0.5 overflow-y-auto relative z-10">
               <p className="text-[9px] font-bold text-slate-400/80 uppercase tracking-[0.15em] px-3 mb-3">Navigation</p>
-              {allItems.map((item) => (
+              {allItems.map((item, navIdx) => (
                 <NavLink
                   key={item.to}
                   to={item.to}
@@ -126,8 +126,8 @@ export default function Sidebar({ user, onLogout, show, onClose }: Props) {
                   className={({ isActive }) =>
                     `group flex items-center gap-3 px-3 py-2.5 rounded-xl text-[13px] font-medium transition-all duration-300 relative ${
                       isActive
-                        ? 'bg-gradient-to-r from-emerald-50/80 to-teal-50/40 text-emerald-700 shadow-sm shadow-emerald-100/40'
-                        : 'text-slate-500 hover:text-slate-800 hover:bg-white/50'
+                        ? 'bg-gradient-to-r from-emerald-50/90 to-teal-50/50 text-emerald-700 shadow-sm shadow-emerald-100/40'
+                        : 'text-slate-500 hover:text-slate-800 hover:bg-white/60 hover:shadow-sm'
                     }`
                   }
                 >
@@ -137,35 +137,49 @@ export default function Sidebar({ user, onLogout, show, onClose }: Props) {
                         <motion.div
                           layoutId="activeNavIndicator"
                           className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-6 rounded-full bg-gradient-to-b from-emerald-400 to-teal-500"
-                          transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+                          transition={{ type: 'spring', stiffness: 500, damping: 35 }}
                         />
                       )}
                       <motion.div
-                        whileHover={{ scale: 1.05 }}
-                        className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all duration-300 ${
+                        whileHover={{ scale: 1.08, rotate: isActive ? 0 : -5 }}
+                        whileTap={{ scale: 0.9 }}
+                        transition={{ type: 'spring', stiffness: 400, damping: 18 }}
+                        className={`w-8 h-8 rounded-lg flex items-center justify-center transition-all duration-300 relative overflow-hidden ${
                           isActive
                             ? 'bg-gradient-to-br from-emerald-500 to-teal-600 shadow-lg shadow-emerald-500/25'
                             : 'bg-slate-100/60 group-hover:bg-white group-hover:shadow-sm'
                         }`}
                       >
-                        <item.icon className={`w-[15px] h-[15px] ${isActive ? 'text-white' : 'text-slate-400 group-hover:text-slate-600'}`} />
+                        {isActive && (
+                          <div className="absolute inset-0 shimmer-premium opacity-40" />
+                        )}
+                        <item.icon className={`w-[15px] h-[15px] relative z-10 ${isActive ? 'text-white' : 'text-slate-400 group-hover:text-slate-600'}`} />
                       </motion.div>
                       <span className="flex-1 truncate">{item.label}</span>
                       {item.badge && (
                         <motion.span
-                          initial={{ scale: 0.8 }}
+                          initial={{ scale: 0 }}
                           animate={{ scale: 1 }}
+                          transition={{ type: 'spring', stiffness: 500, damping: 22, delay: navIdx * 0.05 }}
                           className={`text-[9px] font-bold px-1.5 py-0.5 rounded-md ${
                             isActive
                               ? 'bg-emerald-500/15 text-emerald-600'
-                              : item.badge === 'AI' ? 'bg-gradient-to-r from-blue-50 to-indigo-50 text-blue-600 ring-1 ring-blue-100/50' : 'bg-violet-50 text-violet-600 ring-1 ring-violet-100/50'
+                              : item.badge === 'AI'
+                                ? 'bg-gradient-to-r from-blue-50 to-indigo-50 text-blue-600 ring-1 ring-blue-100/50'
+                                : 'bg-violet-50 text-violet-600 ring-1 ring-violet-100/50'
                           }`}
                         >
                           {item.badge}
                         </motion.span>
                       )}
                       {isActive && (
-                        <ChevronRight className="w-3.5 h-3.5 text-emerald-400 opacity-60" />
+                        <motion.div
+                          initial={{ opacity: 0, x: -4 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ type: 'spring', stiffness: 400 }}
+                        >
+                          <ChevronRight className="w-3.5 h-3.5 text-emerald-400 opacity-60" />
+                        </motion.div>
                       )}
                     </>
                   )}

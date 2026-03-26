@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react'
-import { Routes, Route, Navigate } from 'react-router-dom'
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
+import { AnimatePresence } from 'framer-motion'
 import Sidebar from './components/Sidebar'
 import Header from './components/Header'
 import MobileNav from './components/MobileNav'
+import PageTransition from './components/PageTransition'
 import Dashboard from './pages/Dashboard'
 import AIDoctor from './pages/AIDoctor'
 import MedicalReports from './pages/MedicalReports'
@@ -20,11 +22,9 @@ import { Menu } from 'lucide-react'
 export default function App() {
   const [authed, setAuthed] = useState(isAuthenticated())
   const [user, setUser] = useState<AuthUser | null>(getStoredUser())
-
-  // Sidebar open state
   const [sidebarOpen, setSidebarOpen] = useState(true)
+  const location = useLocation()
 
-  // Global location detection — runs once on app load
   const geo = useUserLocation()
   const userLocation = geo.city
 
@@ -44,18 +44,14 @@ export default function App() {
 
   return (
     <div className="flex h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50/20 mesh-bg relative">
-      {/* Sidebar — hidden on mobile, shown on md+ */}
+      {/* Sidebar — hidden on mobile */}
       <div className="hidden md:block">
-        <Sidebar
-          user={user}
-          onLogout={handleLogout}
-          show={sidebarOpen}
-          onClose={() => setSidebarOpen(false)}
-        />
+        <Sidebar user={user} onLogout={handleLogout} show={sidebarOpen} onClose={() => setSidebarOpen(false)} />
       </div>
+
       <div className="flex-1 flex flex-col overflow-hidden relative">
         <Header user={user} userLocation={userLocation} />
-        {/* Hamburger for md+ when sidebar is closed */}
+
         {!sidebarOpen && (
           <button
             className="hidden md:flex fixed top-4 left-4 z-50 bg-white rounded-full p-2 shadow-md"
@@ -65,25 +61,32 @@ export default function App() {
             <Menu className="w-5 h-5 text-slate-500" />
           </button>
         )}
-        {/* Main content — extra bottom padding on mobile for nav bar */}
+
+        {/* Main content with animated page transitions */}
         <main className="flex-1 overflow-y-auto relative pb-[72px] md:pb-0">
-          <Routes>
-            <Route path="/" element={<Dashboard userLocation={userLocation} />} />
-            <Route path="/ai-doctor" element={<AIDoctor userLocation={userLocation} />} />
-            <Route path="/reports" element={<MedicalReports />} />
-            <Route path="/hospitals" element={<Hospitals userLocation={userLocation} />} />
-            <Route path="/medicines" element={<Medicines />} />
-            <Route path="/history" element={<History />} />
-            <Route path="/settings" element={<Settings />} />
-            <Route path="/learn" element={<LearningLab />} />
-            <Route
-              path="/admin"
-              element={user?.role === 'admin' ? <AdminDashboard /> : <Navigate to="/" replace />}
-            />
-          </Routes>
+          <AnimatePresence mode="wait" initial={false}>
+            <Routes location={location} key={location.pathname}>
+              <Route path="/" element={<PageTransition id="/"><Dashboard userLocation={userLocation} /></PageTransition>} />
+              <Route path="/ai-doctor" element={<PageTransition id="/ai-doctor"><AIDoctor userLocation={userLocation} /></PageTransition>} />
+              <Route path="/reports" element={<PageTransition id="/reports"><MedicalReports /></PageTransition>} />
+              <Route path="/hospitals" element={<PageTransition id="/hospitals"><Hospitals userLocation={userLocation} /></PageTransition>} />
+              <Route path="/medicines" element={<PageTransition id="/medicines"><Medicines /></PageTransition>} />
+              <Route path="/history" element={<PageTransition id="/history"><History /></PageTransition>} />
+              <Route path="/settings" element={<PageTransition id="/settings"><Settings /></PageTransition>} />
+              <Route path="/learn" element={<PageTransition id="/learn"><LearningLab /></PageTransition>} />
+              <Route
+                path="/admin"
+                element={
+                  user?.role === 'admin'
+                    ? <PageTransition id="/admin"><AdminDashboard /></PageTransition>
+                    : <Navigate to="/" replace />
+                }
+              />
+            </Routes>
+          </AnimatePresence>
         </main>
       </div>
-      {/* Mobile bottom navigation — only shown on mobile */}
+
       <MobileNav user={user} />
     </div>
   )

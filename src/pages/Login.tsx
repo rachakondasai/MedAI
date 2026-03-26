@@ -133,6 +133,7 @@ export default function Login({ onAuth }: Props) {
   const [loading, setLoading] = useState(false)
   const [googleLoading, setGoogleLoading] = useState(false)
   const [error, setError] = useState('')
+  const [googleMsg, setGoogleMsg] = useState('')
 
   // Google username prompt state
   const [usernamePrompt, setUsernamePrompt] = useState<{
@@ -201,12 +202,12 @@ export default function Login({ onAuth }: Props) {
   // ── Custom Google button click (when no GSI Client ID is configured) ──
   const handleGoogleClick = useCallback(() => {
     if (GOOGLE_CLIENT_ID) {
-      // If GSI is loaded, trigger the popup
       window.google?.accounts.id.prompt()
       return
     }
-    // No Client ID configured — show a helpful error
-    setError('Google Sign-In is not configured yet. Please sign in with your email below, or contact the admin to enable Google login.')
+    // Show a small inline hint under the button — NOT the red error banner
+    setGoogleMsg('Google Sign-In coming soon! Use your email & password below for now.')
+    setTimeout(() => setGoogleMsg(''), 4000)
   }, [])
 
   // ── Username prompt confirmation ────────────────────────────────────────
@@ -392,7 +393,6 @@ export default function Login({ onAuth }: Props) {
                       {googleLoading ? (
                         <Loader2 className="w-4 h-4 animate-spin text-blue-500" />
                       ) : (
-                        /* Google "G" logo SVG */
                         <svg width="18" height="18" viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg">
                           <path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.615z" fill="#4285F4"/>
                           <path d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18z" fill="#34A853"/>
@@ -403,6 +403,21 @@ export default function Login({ onAuth }: Props) {
                       {googleLoading ? 'Signing in with Google…' : 'Continue with Google'}
                     </motion.button>
                   )}
+
+                  {/* Friendly inline hint — only shows briefly when Google btn is clicked without Client ID */}
+                  <AnimatePresence>
+                    {googleMsg && (
+                      <motion.p
+                        initial={{ opacity: 0, y: -4 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0 }}
+                        className="text-[11px] text-center text-amber-600 bg-amber-50 border border-amber-100 rounded-lg px-3 py-2"
+                      >
+                        {googleMsg}
+                      </motion.p>
+                    )}
+                  </AnimatePresence>
+
                   {googleLoading && GOOGLE_CLIENT_ID && (
                     <div className="flex items-center justify-center gap-2 text-xs text-slate-500">
                       <Loader2 className="w-3.5 h-3.5 animate-spin" />

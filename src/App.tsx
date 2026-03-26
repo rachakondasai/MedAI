@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { Routes, Route, Navigate } from 'react-router-dom'
 import Sidebar from './components/Sidebar'
 import Header from './components/Header'
+import MobileNav from './components/MobileNav'
 import Dashboard from './pages/Dashboard'
 import AIDoctor from './pages/AIDoctor'
 import MedicalReports from './pages/MedicalReports'
@@ -43,25 +44,29 @@ export default function App() {
 
   return (
     <div className="flex h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50/20 mesh-bg relative">
-      <Sidebar
-        user={user}
-        onLogout={handleLogout}
-        show={sidebarOpen}
-        onClose={() => setSidebarOpen(false)}
-      />
+      {/* Sidebar — hidden on mobile, shown on md+ */}
+      <div className="hidden md:block">
+        <Sidebar
+          user={user}
+          onLogout={handleLogout}
+          show={sidebarOpen}
+          onClose={() => setSidebarOpen(false)}
+        />
+      </div>
       <div className="flex-1 flex flex-col overflow-hidden relative">
         <Header user={user} userLocation={userLocation} />
-        {/* Add a button to open sidebar for mobile */}
+        {/* Hamburger for md+ when sidebar is closed */}
         {!sidebarOpen && (
           <button
-            className="fixed top-4 left-4 z-50 bg-white rounded-full p-2 shadow-md md:hidden"
+            className="hidden md:flex fixed top-4 left-4 z-50 bg-white rounded-full p-2 shadow-md"
             onClick={() => setSidebarOpen(true)}
             aria-label="Open sidebar"
           >
             <Menu className="w-5 h-5 text-slate-500" />
           </button>
         )}
-        <main className="flex-1 overflow-y-auto relative">
+        {/* Main content — extra bottom padding on mobile for nav bar */}
+        <main className="flex-1 overflow-y-auto relative pb-[72px] md:pb-0">
           <Routes>
             <Route path="/" element={<Dashboard userLocation={userLocation} />} />
             <Route path="/ai-doctor" element={<AIDoctor userLocation={userLocation} />} />
@@ -78,6 +83,8 @@ export default function App() {
           </Routes>
         </main>
       </div>
+      {/* Mobile bottom navigation — only shown on mobile */}
+      <MobileNav user={user} />
     </div>
   )
 }

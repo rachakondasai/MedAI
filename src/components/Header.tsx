@@ -67,10 +67,10 @@ export default function Header({ user, userLocation }: Props) {
   const greeting = now.getHours() < 12 ? 'Good morning' : now.getHours() < 17 ? 'Good afternoon' : 'Good evening'
 
   return (
-    <header className="h-[76px] glass-strong border-b border-white/40 flex items-center justify-between px-6 shrink-0 relative z-20">
+    <header className="h-[64px] md:h-[76px] glass-strong border-b border-white/40 flex items-center justify-between px-4 md:px-6 shrink-0 relative z-20">
       <div>
         <div className="flex items-center gap-2.5">
-          <h1 className="text-lg font-extrabold text-slate-900 tracking-tight">{pageInfo.title}</h1>
+          <h1 className="text-base md:text-lg font-extrabold text-slate-900 tracking-tight">{pageInfo.title}</h1>
           {location.pathname === '/' && (
             <motion.span
               initial={{ opacity: 0, scale: 0.8 }}
@@ -93,8 +93,8 @@ export default function Header({ user, userLocation }: Props) {
       </div>
 
       <div className="flex items-center gap-2">
-        {/* Search */}
-        <form onSubmit={handleSearchSubmit} className="relative group">
+        {/* Search — hidden on mobile */}
+        <form onSubmit={handleSearchSubmit} className="relative group hidden md:block">
           <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-emerald-500 transition-colors" />
           <input
             ref={searchRef}

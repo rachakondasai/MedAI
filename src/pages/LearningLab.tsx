@@ -1761,6 +1761,7 @@ export default function LearningLab() {
   const totalL = MODULES.reduce((a, m) => a + m.lessons.length, 0)
   const compPct = totalL > 0 ? Math.round((progress.completedLessons.length / totalL) * 100) : 0
   const badgesAll = ALL_BADGES.map(b => progress.badges.find(e => e.id === b.id) || b)
+  const currentView: string = view
 
   return (
     <div ref={ref} className="min-h-full overflow-y-auto">
@@ -1812,6 +1813,52 @@ export default function LearningLab() {
         </motion.div>
       </div>
 
+      {/* ── PERSISTENT TAB BAR ── */}
+      <div className="max-w-7xl mx-auto px-6 pb-4">
+        <div className="flex gap-3 overflow-x-auto pb-1">
+          <motion.button
+            whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
+            onClick={goHome}
+            className={`flex-shrink-0 flex items-center gap-2 px-5 py-2.5 rounded-xl font-medium shadow text-sm transition-all border-2
+              ${currentView === 'home'
+                ? 'bg-white text-blue-700 border-blue-300 shadow-blue-100'
+                : 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white border-transparent shadow-blue-500/20'}`}
+          >
+            <BookOpen className="w-4 h-4" />Modules
+          </motion.button>
+          <motion.button
+            whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
+            onClick={openArchitecture}
+            className={`flex-shrink-0 flex items-center gap-2 px-5 py-2.5 rounded-xl font-medium shadow text-sm transition-all border-2
+              ${currentView === 'architecture'
+                ? 'bg-white text-indigo-700 border-indigo-300 shadow-indigo-100'
+                : 'bg-gradient-to-r from-indigo-500 to-purple-600 text-white border-transparent shadow-indigo-500/20'}`}
+          >
+            <Workflow className="w-4 h-4" />3D Architecture
+          </motion.button>
+          <motion.button
+            whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
+            onClick={() => setView('badges')}
+            className={`flex-shrink-0 flex items-center gap-2 px-5 py-2.5 rounded-xl font-medium shadow text-sm transition-all border-2
+              ${currentView === 'badges'
+                ? 'bg-white text-purple-700 border-purple-300 shadow-purple-100'
+                : 'bg-gradient-to-r from-purple-500 to-violet-600 text-white border-transparent shadow-purple-500/20'}`}
+          >
+            <Trophy className="w-4 h-4" />Badges ({progress.badges.length}/{ALL_BADGES.length})
+          </motion.button>
+          <motion.button
+            whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
+            onClick={() => setView('leaderboard')}
+            className={`flex-shrink-0 flex items-center gap-2 px-5 py-2.5 rounded-xl font-medium shadow text-sm transition-all border-2
+              ${currentView === 'leaderboard'
+                ? 'bg-white text-amber-700 border-amber-300 shadow-amber-100'
+                : 'bg-gradient-to-r from-amber-500 to-orange-600 text-white border-transparent shadow-amber-500/20'}`}
+          >
+            <BarChart3 className="w-4 h-4" />Leaderboard
+          </motion.button>
+        </div>
+      </div>
+
       {/* ── CONTENT ── */}
       <div className="max-w-7xl mx-auto px-6 pb-10">
         <AnimatePresence mode="wait">
@@ -1848,13 +1895,6 @@ export default function LearningLab() {
                 <div className="flex items-center justify-between mb-3"><h3 className="font-semibold text-slate-700">Overall Progress</h3><span className="text-sm font-bold text-blue-600">{compPct}%</span></div>
                 <div className="w-full h-3 bg-slate-100 rounded-full overflow-hidden"><motion.div className="h-full bg-gradient-to-r from-blue-500 to-indigo-500 rounded-full" initial={{ width: 0 }} animate={{ width: `${compPct}%` }} transition={{ duration: 1 }} /></div>
                 <p className="text-xs text-slate-400 mt-2">{progress.completedLessons.length} of {totalL} lessons completed</p>
-              </div>
-
-              {/* Quick actions — now includes Architecture + Badges + Leaderboard */}
-              <div className="flex gap-3 mb-8 overflow-x-auto pb-2">
-                <motion.button whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }} onClick={openArchitecture} className="flex-shrink-0 flex items-center gap-2 bg-gradient-to-r from-indigo-500 to-purple-600 text-white px-5 py-2.5 rounded-xl font-medium shadow-lg shadow-indigo-500/20 text-sm"><Workflow className="w-4 h-4" />3D Architecture</motion.button>
-                <motion.button whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }} onClick={() => setView('badges')} className="flex-shrink-0 flex items-center gap-2 bg-gradient-to-r from-purple-500 to-violet-600 text-white px-5 py-2.5 rounded-xl font-medium shadow-lg shadow-purple-500/20 text-sm"><Trophy className="w-4 h-4" />Badges ({progress.badges.length}/{ALL_BADGES.length})</motion.button>
-                <motion.button whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }} onClick={() => setView('leaderboard')} className="flex-shrink-0 flex items-center gap-2 bg-gradient-to-r from-amber-500 to-orange-600 text-white px-5 py-2.5 rounded-xl font-medium shadow-lg shadow-amber-500/20 text-sm"><BarChart3 className="w-4 h-4" />Leaderboard</motion.button>
               </div>
 
               {/* Modules */}

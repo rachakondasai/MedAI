@@ -24,9 +24,11 @@ import {
   Brain,
   Shield,
   Crown,
+  PackageSearch,
 } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { getStoredUser } from '../lib/auth'
+import { getOrders, saveOrders } from './Orders'
 
 // --- Types ---
 interface TestPackage {
@@ -174,7 +176,7 @@ export default function Appointments() {
   const [submitting, setSubmitting] = useState(false)
   const [submitted, setSubmitted] = useState(false)
 
-  const isPro = false // TODO: load from subscription
+  const isPro = true // All users can book tests
 
   const filteredTests = TEST_PACKAGES.filter(
     (t) =>
@@ -188,9 +190,30 @@ export default function Appointments() {
   }
 
   const handleSubmit = async () => {
+    if (!selectedTest) return
     setSubmitting(true)
-    // Simulate API call
-    await new Promise((r) => setTimeout(r, 1500))
+    await new Promise((r) => setTimeout(r, 1200))
+
+    // Save order to localStorage
+    const selectedLab = LAB_CENTERS.find((l) => l.id === form.labId)
+    const txnRef = `MEDAI-${selectedTest.id.toUpperCase()}-${Date.now().toString().slice(-6)}`
+    const newOrder = {
+      id: `ORD-${Date.now()}`,
+      testName: selectedTest.name,
+      labName: selectedLab?.name || '',
+      labAddress: selectedLab?.address || '',
+      labPhone: '',
+      amount: Math.round(selectedTest.price * 83), // USD → INR approximate
+      status: 'pending_payment' as const,
+      paymentStatus: 'pending' as const,
+      orderedAt: new Date().toISOString(),
+      collectionMode: form.mode,
+      txnRef,
+      userId: user?.id,
+    }
+    const existing = getOrders()
+    saveOrders([newOrder, ...existing])
+
     setSubmitting(false)
     setSubmitted(true)
   }
@@ -272,11 +295,14 @@ export default function Appointments() {
             {form.date} at {form.timeSlot} • {form.mode === 'home' ? 'Home collection' : 'Walk-in'}
           </p>
           <div className="bg-emerald-50 rounded-xl p-4 text-xs text-emerald-700 mb-6">
-            📲 A confirmation SMS will be sent to <strong>{form.phone}</strong>. Results will appear in the <strong>Medical Reports</strong> tab once ready.
+            📲 A confirmation SMS will be sent to <strong>{form.phone}</strong>. Complete payment via UPI to confirm your slot. Track your order in <strong>My Orders</strong>.
           </div>
           <div className="flex flex-col gap-2">
-            <button onClick={() => navigate('/reports')} className="w-full py-3 rounded-xl bg-emerald-600 text-white text-sm font-bold">
-              View Reports
+            <button onClick={() => navigate('/orders')} className="w-full py-3 rounded-xl bg-emerald-600 text-white text-sm font-bold flex items-center justify-center gap-2">
+              <PackageSearch className="w-4 h-4" /> View My Orders
+            </button>
+            <button onClick={() => navigate('/payments')} className="w-full py-3 rounded-xl bg-blue-600 text-white text-sm font-bold">
+              Pay via UPI
             </button>
             <button onClick={() => { setStep(1); setSubmitted(false); setSelectedTest(null) }} className="w-full py-2.5 text-sm text-slate-400 hover:text-slate-600 transition-colors">
               Book Another Test

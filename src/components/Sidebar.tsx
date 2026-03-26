@@ -19,6 +19,7 @@ import {
   Crown,
   Gift,
   QrCode,
+  PackageSearch,
 } from 'lucide-react'
 import { logout, type AuthUser } from '../lib/auth'
 
@@ -29,12 +30,19 @@ const navItems = [
   { to: '/hospitals', icon: Building2, label: 'Hospitals', badge: null, group: 'core' },
   { to: '/medicines', icon: Pill, label: 'Medicines', badge: null, group: 'core' },
   { to: '/history', icon: Clock, label: 'History', badge: null, group: 'core' },
-  { to: '/appointments', icon: FlaskConical, label: 'Book Blood Test', badge: 'Pro', group: 'premium' },
-  { to: '/payments', icon: QrCode, label: 'Pay via PhonePe', badge: 'UPI', group: 'premium' },
-  { to: '/referrals', icon: Gift, label: 'Referral Earnings', badge: 'Elite', group: 'premium' },
+  { to: '/appointments', icon: FlaskConical, label: 'Book Blood Test', badge: 'New', group: 'premium' },
+  { to: '/orders', icon: PackageSearch, label: 'My Orders', badge: null, group: 'premium' },
+  { to: '/payments', icon: QrCode, label: 'Pay via UPI', badge: 'UPI', group: 'premium' },
   { to: '/subscriptions', icon: Crown, label: 'Plans & Pricing', badge: null, group: 'premium' },
-  { to: '/learn', icon: BookOpen, label: 'Learning Lab', badge: '3D', group: 'tools' },
+  { to: '/referrals', icon: Gift, label: 'Referral Earnings', badge: 'Elite', group: 'premium' },
   { to: '/settings', icon: Settings, label: 'Settings', badge: null, group: 'tools' },
+]
+
+// Admin-only items (including Learning Lab — hidden from regular users)
+const adminOnlyItems = [
+  { to: '/admin', icon: Shield, label: 'Admin Panel', badge: null, group: 'tools' as const },
+  { to: '/admin/orders', icon: PackageSearch, label: 'Lab Orders', badge: 'New', group: 'tools' as const },
+  { to: '/learn', icon: BookOpen, label: 'Learning Lab', badge: '3D', group: 'tools' as const },
 ]
 
 interface Props {
@@ -46,7 +54,7 @@ interface Props {
 
 export default function Sidebar({ user, onLogout, show, onClose }: Props) {
   const allItems = user?.role === 'admin'
-    ? [...navItems, { to: '/admin', icon: Shield, label: 'Admin Panel', badge: null, group: 'tools' as const }]
+    ? [...navItems, ...adminOnlyItems]
     : navItems
 
   const handleLogout = async () => {

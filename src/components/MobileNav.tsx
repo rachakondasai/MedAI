@@ -5,7 +5,7 @@ import {
   LayoutDashboard, Bot, FileText, Building2, Pill,
   Clock, BookOpen, Settings, Shield, X, Sparkles,
   ChevronRight, Heart, Brain, GraduationCap,
-  FlaskConical, Gift, Crown, QrCode,
+  FlaskConical, Gift, Crown, QrCode, PackageSearch,
 } from 'lucide-react'
 import type { AuthUser } from '../lib/auth'
 
@@ -17,14 +17,22 @@ const NAV_ITEMS = [
   { to: '/medicines', icon: Pill,            label: 'Pharmacy', color: 'from-amber-500 to-orange-600',  dot: 'bg-amber-400' },
 ]
 
-const MORE_ITEMS = [
-  { to: '/appointments', icon: FlaskConical, label: 'Book Blood Test',   desc: 'Book a lab test near you',    color: 'from-teal-500 to-cyan-600' },
-  { to: '/payments',     icon: QrCode,       label: 'Pay via PhonePe',   desc: 'UPI / QR code payment',       color: 'from-purple-500 to-violet-600' },
-  { to: '/referrals',    icon: Gift,          label: 'Referral Earnings', desc: 'Earn 15% commissions',       color: 'from-violet-500 to-purple-600' },
-  { to: '/subscriptions',icon: Crown,         label: 'Plans & Pricing',   desc: 'Upgrade to Pro or Elite',    color: 'from-amber-500 to-orange-500' },
-  { to: '/learn',        icon: GraduationCap, label: 'Learning Lab',      desc: 'AI-powered courses',         color: 'from-indigo-500 to-blue-600' },
-  { to: '/history',      icon: Clock,         label: 'History',           desc: 'Past consultations',         color: 'from-blue-500 to-indigo-600' },
-  { to: '/settings',     icon: Settings,      label: 'Settings',          desc: 'Account & preferences',      color: 'from-slate-500 to-slate-600' },
+// Items for regular users (no Learning Lab)
+const USER_MORE_ITEMS = [
+  { to: '/appointments', icon: FlaskConical,  label: 'Book Blood Test',   desc: 'Book a lab test near you',    color: 'from-teal-500 to-cyan-600' },
+  { to: '/orders',       icon: PackageSearch, label: 'My Orders',         desc: 'Track your lab test orders',  color: 'from-indigo-500 to-blue-600' },
+  { to: '/payments',     icon: QrCode,        label: 'Pay via UPI',       desc: 'PhonePe / GPay / Paytm',      color: 'from-purple-500 to-violet-600' },
+  { to: '/referrals',    icon: Gift,          label: 'Referral Earnings', desc: 'Earn 15% commissions',        color: 'from-violet-500 to-purple-600' },
+  { to: '/subscriptions',icon: Crown,         label: 'Plans & Pricing',   desc: 'Upgrade to Pro or Elite',     color: 'from-amber-500 to-orange-500' },
+  { to: '/history',      icon: Clock,         label: 'History',           desc: 'Past consultations',          color: 'from-blue-500 to-indigo-600' },
+  { to: '/settings',     icon: Settings,      label: 'Settings',          desc: 'Account & preferences',       color: 'from-slate-500 to-slate-600' },
+]
+
+// Extra items shown only for admin
+const ADMIN_MORE_ITEMS = [
+  { to: '/admin',        icon: Shield,        label: 'Admin Panel',       desc: 'Manage users & system',       color: 'from-red-500 to-rose-600' },
+  { to: '/admin/orders', icon: PackageSearch, label: 'Lab Orders',        desc: 'Manage all lab orders',       color: 'from-orange-500 to-red-600' },
+  { to: '/learn',        icon: GraduationCap, label: 'Learning Lab',      desc: 'AI-powered courses',          color: 'from-indigo-500 to-blue-600' },
 ]
 
 interface Props { user?: AuthUser | null }
@@ -35,8 +43,8 @@ export default function MobileNav({ user }: Props) {
   const [tappedIndex, setTappedIndex] = useState<number | null>(null)
 
   const allMore = user?.role === 'admin'
-    ? [...MORE_ITEMS, { to: '/admin', icon: Shield, label: 'Admin Panel', desc: 'Manage users & system', color: 'from-red-500 to-rose-600' }]
-    : MORE_ITEMS
+    ? [...USER_MORE_ITEMS, ...ADMIN_MORE_ITEMS]
+    : USER_MORE_ITEMS
 
   const moreActive = allMore.some(i => location.pathname === i.to)
 

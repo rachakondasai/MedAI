@@ -600,14 +600,55 @@ export default function Payments() {
                   <CopyButton text={UPI_ID} label="Copy UPI ID" />
                 </div>
 
-                {/* Open in app button */}
-                <a
-                  href={upiUrl}
-                  className="flex items-center gap-2.5 px-6 py-3.5 bg-gradient-to-r from-[#5f259f] to-[#7c3aed] text-white text-sm font-bold rounded-2xl hover:opacity-90 transition-all shadow-xl shadow-purple-300/40 w-full justify-center"
-                >
-                  <Smartphone className="w-5 h-5" />
-                  Open PhonePe / GPay / Paytm
-                </a>
+                {/* ── Direct App Buttons — PhonePe / GPay / Paytm ── */}
+                <div className="w-full space-y-2">
+                  <p className="text-[10px] text-slate-500 font-semibold uppercase tracking-wider text-center">Open directly in your app</p>
+                  <div className="grid grid-cols-3 gap-2">
+                    {/* PhonePe */}
+                    <a
+                      href={`phonepe://pay?pa=${UPI_ID}&pn=${encodeURIComponent(MERCHANT_NAME)}&am=${selected.amount.toFixed(2)}&cu=INR&tn=${encodeURIComponent(selected.title)}&tr=${txnRef}`}
+                      className="flex flex-col items-center gap-1.5 p-3 bg-[#5f259f] hover:bg-[#4e1f87] text-white rounded-2xl transition-all shadow-lg shadow-purple-300/30 active:scale-95"
+                    >
+                      <svg width="24" height="24" viewBox="0 0 40 40" fill="none">
+                        <rect width="40" height="40" rx="10" fill="white"/>
+                        <text x="20" y="27" fontSize="20" textAnchor="middle" fill="#5f259f" fontWeight="bold">P</text>
+                      </svg>
+                      <span className="text-[10px] font-bold">PhonePe</span>
+                    </a>
+                    {/* GPay */}
+                    <a
+                      href={`tez://upi/pay?pa=${UPI_ID}&pn=${encodeURIComponent(MERCHANT_NAME)}&am=${selected.amount.toFixed(2)}&cu=INR&tn=${encodeURIComponent(selected.title)}`}
+                      className="flex flex-col items-center gap-1.5 p-3 bg-white border-2 border-blue-200 hover:border-blue-400 rounded-2xl transition-all shadow-md active:scale-95"
+                    >
+                      <svg width="24" height="24" viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.615z" fill="#4285F4"/>
+                        <path d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18z" fill="#34A853"/>
+                        <path d="M3.964 10.71A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.042l3.007-2.332z" fill="#FBBC05"/>
+                        <path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.958L3.964 6.29C4.672 4.163 6.656 3.58 9 3.58z" fill="#EA4335"/>
+                      </svg>
+                      <span className="text-[10px] font-bold text-slate-700">GPay</span>
+                    </a>
+                    {/* Paytm */}
+                    <a
+                      href={`paytmmp://pay?pa=${UPI_ID}&pn=${encodeURIComponent(MERCHANT_NAME)}&am=${selected.amount.toFixed(2)}&cu=INR&tn=${encodeURIComponent(selected.title)}`}
+                      className="flex flex-col items-center gap-1.5 p-3 bg-[#00BAF2] hover:bg-[#009fd1] text-white rounded-2xl transition-all shadow-lg shadow-blue-300/30 active:scale-95"
+                    >
+                      <svg width="24" height="24" viewBox="0 0 40 40" fill="none">
+                        <rect width="40" height="40" rx="10" fill="white"/>
+                        <text x="20" y="27" fontSize="14" textAnchor="middle" fill="#00BAF2" fontWeight="bold">PT</text>
+                      </svg>
+                      <span className="text-[10px] font-bold">Paytm</span>
+                    </a>
+                  </div>
+                  {/* Fallback generic UPI */}
+                  <a
+                    href={upiUrl}
+                    className="flex items-center justify-center gap-2 w-full py-2.5 bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold rounded-xl transition-all"
+                  >
+                    <Smartphone className="w-4 h-4" />
+                    Open in any UPI App
+                  </a>
+                </div>
 
                 {/* Amount warning */}
                 <div className="flex items-center gap-2 text-xs text-slate-500 bg-amber-50 px-4 py-2.5 rounded-xl border border-amber-100 w-full">

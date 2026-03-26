@@ -19,6 +19,8 @@ import Subscriptions from './pages/Subscriptions'
 import Appointments from './pages/Appointments'
 import Referrals from './pages/Referrals'
 import Payments from './pages/Payments'
+import Orders from './pages/Orders'
+import AdminOrders from './pages/AdminOrders'
 import { isAuthenticated, isAdmin, getStoredUser, type AuthUser } from './lib/auth'
 import { useUserLocation } from './lib/useLocation'
 import { Menu } from 'lucide-react'
@@ -82,11 +84,20 @@ export default function App() {
               <Route path="/appointments" element={<PageTransition id="/appointments"><Appointments /></PageTransition>} />
               <Route path="/referrals" element={<PageTransition id="/referrals"><Referrals /></PageTransition>} />
               <Route path="/payments" element={<PageTransition id="/payments"><Payments /></PageTransition>} />
+              <Route path="/orders" element={<PageTransition id="/orders"><Orders /></PageTransition>} />
               <Route
                 path="/admin"
                 element={
                   user?.role === 'admin'
                     ? <PageTransition id="/admin"><AdminDashboard /></PageTransition>
+                    : <Navigate to="/" replace />
+                }
+              />
+              <Route
+                path="/admin/orders"
+                element={
+                  user?.role === 'admin'
+                    ? <PageTransition id="/admin/orders"><AdminOrders /></PageTransition>
                     : <Navigate to="/" replace />
                 }
               />

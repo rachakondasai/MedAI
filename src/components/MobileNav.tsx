@@ -5,6 +5,7 @@ import {
   LayoutDashboard, Bot, FileText, Building2, Pill,
   Clock, BookOpen, Settings, Shield, X, Sparkles,
   ChevronRight, Heart, Brain, GraduationCap,
+  FlaskConical, Gift, Crown,
 } from 'lucide-react'
 import type { AuthUser } from '../lib/auth'
 
@@ -17,9 +18,12 @@ const NAV_ITEMS = [
 ]
 
 const MORE_ITEMS = [
-  { to: '/learn',    icon: GraduationCap, label: 'Learning Lab', desc: 'AI-powered courses',      color: 'from-violet-500 to-purple-600' },
-  { to: '/history',  icon: Clock,         label: 'History',      desc: 'Past consultations',      color: 'from-blue-500 to-indigo-600' },
-  { to: '/settings', icon: Settings,      label: 'Settings',     desc: 'Account & preferences',  color: 'from-slate-500 to-slate-600' },
+  { to: '/appointments', icon: FlaskConical, label: 'Book Blood Test',   desc: 'Book a lab test near you',    color: 'from-teal-500 to-cyan-600' },
+  { to: '/referrals',    icon: Gift,          label: 'Referral Earnings', desc: 'Earn 15% commissions',       color: 'from-violet-500 to-purple-600' },
+  { to: '/subscriptions',icon: Crown,         label: 'Plans & Pricing',   desc: 'Upgrade to Pro or Elite',    color: 'from-amber-500 to-orange-500' },
+  { to: '/learn',        icon: GraduationCap, label: 'Learning Lab',      desc: 'AI-powered courses',         color: 'from-indigo-500 to-blue-600' },
+  { to: '/history',      icon: Clock,         label: 'History',           desc: 'Past consultations',         color: 'from-blue-500 to-indigo-600' },
+  { to: '/settings',     icon: Settings,      label: 'Settings',          desc: 'Account & preferences',      color: 'from-slate-500 to-slate-600' },
 ]
 
 interface Props { user?: AuthUser | null }

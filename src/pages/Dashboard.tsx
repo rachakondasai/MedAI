@@ -26,6 +26,8 @@ import {
   Verified,
   ChevronRight,
   MapPin,
+  FlaskConical,
+  Gift,
 } from 'lucide-react'
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts'
 import { getHealthSummary, checkBackendHealth, getLatestVitals, getVitals, addVitals, type VitalsEntry } from '../lib/api'
@@ -401,6 +403,70 @@ export default function Dashboard({ userLocation = '' }: { userLocation?: string
           </motion.button>
         ))}
       </div>
+
+      {/* Upgrade Banner — Blood Test + Pro Features */}
+      <motion.div
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.45 }}
+        className="grid grid-cols-1 sm:grid-cols-3 gap-3"
+      >
+        {[
+          {
+            icon: FlaskConical,
+            title: 'Book a Blood Test',
+            desc: 'Certified labs near you. Results in-app.',
+            badge: 'Pro',
+            badgeColor: 'bg-teal-100 text-teal-700',
+            gradient: 'from-teal-500 to-cyan-600',
+            path: '/appointments',
+          },
+          {
+            icon: Gift,
+            title: 'Earn Referral Commissions',
+            desc: '15% on every test you refer to others.',
+            badge: 'Elite',
+            badgeColor: 'bg-violet-100 text-violet-700',
+            gradient: 'from-violet-500 to-purple-600',
+            path: '/referrals',
+          },
+          {
+            icon: Crown,
+            title: 'Upgrade to Pro',
+            desc: 'Unlimited AI chats, reports & more.',
+            badge: 'New',
+            badgeColor: 'bg-amber-100 text-amber-700',
+            gradient: 'from-amber-500 to-orange-500',
+            path: '/subscriptions',
+          },
+        ].map((item, i) => (
+          <motion.button
+            key={item.title}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5 + i * 0.08 }}
+            whileHover={{ y: -4, scale: 1.02 }}
+            whileTap={{ scale: 0.97 }}
+            onClick={() => navigate(item.path)}
+            className="text-left bg-white rounded-2xl border border-slate-100 p-4 shadow-sm hover:shadow-lg transition-all group relative overflow-hidden"
+          >
+            <div className={`absolute inset-0 bg-gradient-to-br ${item.gradient} opacity-0 group-hover:opacity-[0.04] transition-opacity duration-300 rounded-2xl`} />
+            <div className="relative flex items-center gap-3">
+              <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${item.gradient} flex items-center justify-center shadow-lg shrink-0`}>
+                <item.icon className="w-5 h-5 text-white" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 mb-0.5">
+                  <p className="text-sm font-bold text-slate-900 truncate">{item.title}</p>
+                  <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full shrink-0 ${item.badgeColor}`}>{item.badge}</span>
+                </div>
+                <p className="text-xs text-slate-500">{item.desc}</p>
+              </div>
+              <ChevronRight className="w-4 h-4 text-slate-300 group-hover:text-slate-500 transition-colors shrink-0" />
+            </div>
+          </motion.button>
+        ))}
+      </motion.div>
 
       {/* Stats Cards — Pro Animated with count-up */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4">

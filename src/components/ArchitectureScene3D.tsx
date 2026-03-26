@@ -17,17 +17,100 @@
  * Spring physics: stiffness 120 / damping 20
  */
 
-import { useRef, useState, useCallback, useEffect, Suspense } from 'react'
+import { useRef, useState, useCallback, useEffect, Suspense, useMemo } from 'react'
 import { Canvas, useFrame, useThree } from '@react-three/fiber'
 import {
   RoundedBox,
-  Text,
   Sparkles,
 } from '@react-three/drei'
 import { MotionConfig } from 'framer-motion'
 import { motion as motion2d } from 'framer-motion'
 import * as THREE from 'three'
 import { Play, Zap, RotateCcw } from 'lucide-react'
+
+/* ─────────────────────────────────────────────────────────
+   CANVAS-TEXTURE TEXT SPRITE
+   Draws text onto an offscreen <canvas> and maps it as a
+   PlaneGeometry texture — NO external font fetches.
+───────────────────────────────────────────────────────── */
+interface TextSpriteProps {
+  text: string
+  position: [number, number, number]
+  fontSize?: number
+  color?: string
+  maxWidth?: number
+  bold?: boolean
+  opacity?: number
+}
+
+function TextSprite({
+  text,
+  position,
+  fontSize = 28,
+  color = '#ffffff',
+  maxWidth = 320,
+  bold = false,
+  opacity = 1,
+}: TextSpriteProps) {
+  const texture = useMemo(() => {
+    const canvas = document.createElement('canvas')
+    const ctx = canvas.getContext('2d')!
+    const dpr = 2
+    const font = `${bold ? 'bold ' : ''}${fontSize * dpr}px Inter, system-ui, sans-serif`
+    ctx.font = font
+
+    // Word-wrap helper
+    const words = text.split(' ')
+    const lines: string[] = []
+    let line = ''
+    for (const word of words) {
+      const testLine = line ? `${line} ${word}` : word
+      if (ctx.measureText(testLine).width > maxWidth * dpr && line) {
+        lines.push(line)
+        line = word
+      } else {
+        line = testLine
+      }
+    }
+    lines.push(line)
+
+    const lineH = fontSize * dpr * 1.35
+    const canvasW = maxWidth * dpr
+    const canvasH = lineH * lines.length + 16 * dpr
+
+    canvas.width = canvasW
+    canvas.height = canvasH
+    ctx.clearRect(0, 0, canvasW, canvasH)
+
+    ctx.font = font
+    ctx.fillStyle = color
+    ctx.textAlign = 'center'
+    ctx.textBaseline = 'top'
+    lines.forEach((l, i) => ctx.fillText(l, canvasW / 2, i * lineH + 8 * dpr))
+
+    const tex = new THREE.CanvasTexture(canvas)
+    tex.needsUpdate = true
+    return { tex, w: canvasW, h: canvasH }
+  }, [text, fontSize, color, maxWidth, bold])
+
+  const aspect = texture.w / texture.h
+  const worldH = (fontSize / 100) * 1.1
+  const worldW = worldH * aspect
+
+  return (
+    <mesh position={position} renderOrder={10}>
+      <planeGeometry args={[worldW, worldH]} />
+      <meshBasicMaterial
+        map={texture.tex}
+        transparent
+        opacity={opacity}
+        depthWrite={false}
+        side={THREE.DoubleSide}
+        toneMapped={false}
+      />
+    </mesh>
+  )
+}
 
 /* ─────────────────────────────────────────────────────────
    CONSTANTS
@@ -424,45 +507,33 @@ function GlassLayer({
       </mesh>
 
       {/* Layer title text */}
-      <Text
-        position={[0, 3.1, 0.12]}
-        fontSize={0.32}
+      <TextSprite
+        text={config.label}
+        position={[0, 3.1, 0.18]}
+        fontSize={36}
         color={config.color}
-        anchorX="center"
-        anchorY="middle"
-        fontWeight="bold"
-        outlineWidth={0.008}
-        outlineColor="#000000"
-        renderOrder={10}
-      >
-        {config.label}
-      </Text>
+        bold
+        maxWidth={200}
+      />
 
       {/* Sublabel */}
-      <Text
-        position={[0, 2.72, 0.12]}
-        fontSize={0.16}
+      <TextSprite
+        text={config.sublabel}
+        position={[0, 2.72, 0.18]}
+        fontSize={18}
         color="#94a3b8"
-        anchorX="center"
-        anchorY="middle"
-        renderOrder={10}
-      >
-        {config.sublabel}
-      </Text>
+        maxWidth={200}
+      />
 
       {/* Description text */}
-      <Text
-        position={[0, -3.1, 0.12]}
-        fontSize={0.12}
+      <TextSprite
+        text={config.description}
+        position={[0, -3.1, 0.18]}
+        fontSize={13}
         color="#64748b"
-        anchorX="center"
-        anchorY="middle"
-        maxWidth={2}
-        textAlign="center"
-        renderOrder={10}
-      >
-        {config.description}
-      </Text>
+        maxWidth={220}
+        opacity={0.8}
+      />
 
       {/* Per-layer sparkles */}
       <Sparkles

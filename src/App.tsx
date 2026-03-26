@@ -15,6 +15,9 @@ import Settings from './pages/Settings'
 import AdminDashboard from './pages/AdminDashboard'
 import Login from './pages/Login'
 import LearningLab from './pages/LearningLab'
+import Subscriptions from './pages/Subscriptions'
+import Appointments from './pages/Appointments'
+import Referrals from './pages/Referrals'
 import { isAuthenticated, isAdmin, getStoredUser, type AuthUser } from './lib/auth'
 import { useUserLocation } from './lib/useLocation'
 import { Menu } from 'lucide-react'
@@ -74,6 +77,9 @@ export default function App() {
               <Route path="/history" element={<PageTransition id="/history"><History /></PageTransition>} />
               <Route path="/settings" element={<PageTransition id="/settings"><Settings /></PageTransition>} />
               <Route path="/learn" element={<PageTransition id="/learn"><LearningLab /></PageTransition>} />
+              <Route path="/subscriptions" element={<PageTransition id="/subscriptions"><Subscriptions /></PageTransition>} />
+              <Route path="/appointments" element={<PageTransition id="/appointments"><Appointments /></PageTransition>} />
+              <Route path="/referrals" element={<PageTransition id="/referrals"><Referrals /></PageTransition>} />
               <Route
                 path="/admin"
                 element={

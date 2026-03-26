@@ -269,9 +269,14 @@ export default function Login({ onAuth }: Props) {
 
               {mode === 'login' && (
                 <div className="text-center pt-2">
-                  <p className="text-[11px] text-slate-400">
-                    Demo: <span className="font-mono text-slate-500 bg-slate-50 px-1.5 py-0.5 rounded">admin@medai.com</span> / <span className="font-mono text-slate-500 bg-slate-50 px-1.5 py-0.5 rounded">admin123</span>
-                  </p>
+                  <button
+                    type="button"
+                    onClick={() => { setMode('signup'); setError('') }}
+                    className="text-[12px] text-slate-400 hover:text-emerald-600 transition-colors"
+                  >
+                    Don't have an account?{' '}
+                    <span className="font-semibold text-emerald-600 underline underline-offset-2">Sign up free</span>
+                  </button>
                 </div>
               )}
             </form>

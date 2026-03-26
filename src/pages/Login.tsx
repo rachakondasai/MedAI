@@ -243,7 +243,14 @@ export default function Login({ onAuth }: Props) {
       }
       onAuth()
     } catch (err: any) {
-      setError(err.message || 'Authentication failed.')
+      const msg: string = err.message || 'Authentication failed.'
+      // If user tried to Sign In but account doesn't exist → auto-switch to signup
+      if (mode === 'login' && (msg.toLowerCase().includes('invalid email') || msg.toLowerCase().includes('not found') || msg.toLowerCase().includes('no account'))) {
+        setMode('signup')
+        setError('No account found with this email. Please fill in your name and create one!')
+      } else {
+        setError(msg)
+      }
     } finally {
       setLoading(false)
     }
@@ -366,7 +373,7 @@ export default function Login({ onAuth }: Props) {
                       mode === tab ? 'text-emerald-600' : 'text-slate-400 hover:text-slate-600'
                     }`}
                   >
-                    {tab === 'login' ? 'Sign In' : 'Create Account'}
+                    {tab === 'login' ? '👋 Sign In' : '🆕 Create Account'}
                     {mode === tab && (
                       <motion.div layoutId="authTab" className="absolute bottom-0 left-0 right-0 h-0.5 bg-gradient-to-r from-emerald-500 to-teal-500" />
                     )}
@@ -532,11 +539,13 @@ export default function Login({ onAuth }: Props) {
                       <button
                         type="button"
                         onClick={() => { setMode('signup'); setError('') }}
-                        className="text-[12px] text-slate-400 hover:text-emerald-600 transition-colors"
+                        className="w-full py-2.5 rounded-xl border-2 border-dashed border-emerald-200 bg-emerald-50 hover:bg-emerald-100 hover:border-emerald-400 transition-all text-[13px] font-semibold text-emerald-700"
                       >
-                        Don't have an account?{' '}
-                        <span className="font-semibold text-emerald-600 underline underline-offset-2">Sign up free</span>
+                        🆕 New here? Create a free account →
                       </button>
+                      <p className="text-[11px] text-slate-400 mt-2">
+                        First time? You must create an account before signing in
+                      </p>
                     </div>
                   )}
                 </form>

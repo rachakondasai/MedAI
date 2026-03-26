@@ -67,9 +67,24 @@ interface PaymentItem {
   iconBg: string
   category: 'subscription' | 'test'
   popular?: boolean
+  isTestPayment?: boolean   // ← ₹10 test payment flag
 }
 
 const PAYMENT_ITEMS: PaymentItem[] = [
+  // ── ₹10 TEST PAYMENT (first so it's always visible) ──────────────────────
+  {
+    id: 'test_10',
+    title: '₹10 Test Payment',
+    description: 'Verify your UPI works — refunded or credited as MedAI balance',
+    amount: 10,
+    icon: FlaskConical,
+    color: 'text-teal-600',
+    iconBg: 'bg-teal-50',
+    category: 'test',
+    popular: false,
+    isTestPayment: true,
+  },
+  // ─────────────────────────────────────────────────────────────────────────
   {
     id: 'pro_monthly',
     title: 'Pro Plan — Monthly',
@@ -238,8 +253,8 @@ function CopyButton({ text, label = 'Copy UPI ID' }: { text: string; label?: str
 // Message sent TO YOU (admin) — full payment details
 function buildAdminMsg(item: PaymentItem, txnRef: string, userName: string, userEmail: string, userPhone: string) {
   return encodeURIComponent(
-    `🔔 *New Payment — MedAI*\n\n` +
-    `📦 *Plan/Test:* ${item.title}\n` +
+    `${item.isTestPayment ? '� *TEST Payment — MedAI*\n' : '�🔔 *New Payment — MedAI*\n'}\n` +
+    `📦 *Plan/Test:* ${item.title}${item.isTestPayment ? ' (₹10 test — please refund or credit)' : ''}\n` +
     `💰 *Amount:* ₹${item.amount}\n` +
     `🔑 *Ref:* ${txnRef}\n` +
     `👤 *User:* ${userName || 'Unknown'}\n` +
@@ -247,21 +262,25 @@ function buildAdminMsg(item: PaymentItem, txnRef: string, userName: string, user
     `📱 *Phone:* ${userPhone || 'N/A'}\n` +
     `💳 *UPI paid to:* ${UPI_ID}\n` +
     `🕒 *Time:* ${new Date().toLocaleString('en-IN')}\n\n` +
-    `Please verify the payment screenshot and activate the plan. 🙏`
+    (item.isTestPayment
+      ? `Please verify the ₹10 test payment and credit it to the user's MedAI wallet. 🙏`
+      : `Please verify the payment screenshot and activate the plan. 🙏`)
   )
 }
 
 // Message sent TO USER — their own confirmation receipt
 function buildUserMsg(item: PaymentItem, txnRef: string, userName: string) {
   return encodeURIComponent(
-    `✅ *MedAI Payment Receipt*\n\n` +
+    `${item.isTestPayment ? '🔬 *MedAI Test Payment Receipt*' : '✅ *MedAI Payment Receipt*'}\n\n` +
     `Hi ${userName || 'there'}! 👋\n\n` +
     `Thank you for your payment.\n\n` +
     `📦 *Plan/Test:* ${item.title}\n` +
     `💰 *Amount Paid:* ₹${item.amount}\n` +
     `🔑 *Reference:* ${txnRef}\n` +
     `📅 *Date:* ${new Date().toLocaleDateString('en-IN')}\n\n` +
-    `Your plan will be activated within a few hours after verification. ⚡\n\n` +
+    (item.isTestPayment
+      ? `Your ₹10 test payment was received! We'll credit it to your MedAI wallet within a few hours. ⚡\n\n`
+      : `Your plan will be activated within a few hours after verification. ⚡\n\n`) +
     `_— MedAI Team_`
   )
 }
@@ -275,14 +294,18 @@ export default function Payments() {
   const user = getStoredUser()
   const [step, setStep] = useState<Step>('select')
   const [selected, setSelected] = useState<PaymentItem | null>(null)
-  const [filter, setFilter] = useState<'all' | 'subscription' | 'test'>('all')
+  const [filter, setFilter] = useState<'all' | 'subscription' | 'test' | 'testing'>('all')
   const [submitting, setSubmitting] = useState(false)
   const [txnRef, setTxnRef] = useState('')
   // User's own phone for WhatsApp self-notification
   const [userPhone, setUserPhone] = useState('')
   const [adminNotified, setAdminNotified] = useState(false)
 
-  const filtered = PAYMENT_ITEMS.filter(p => filter === 'all' || p.category === filter)
+  const filtered = PAYMENT_ITEMS.filter(p => {
+    if (filter === 'testing') return !!p.isTestPayment
+    if (filter === 'all') return true
+    return p.category === filter
+  })
 
   const handleSelect = (item: PaymentItem) => {
     const ref = `MEDAI-${item.id.toUpperCase().slice(0, 6)}-${Date.now().toString().slice(-6)}`
@@ -403,13 +426,16 @@ export default function Payments() {
                   { key: 'all',          label: 'All' },
                   { key: 'subscription', label: '📋 Plans' },
                   { key: 'test',         label: '🧪 Blood Tests' },
+                  { key: 'testing',      label: '🔬 Test ₹10' },
                 ].map(tab => (
                   <button
                     key={tab.key}
                     onClick={() => setFilter(tab.key as any)}
                     className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all ${
                       filter === tab.key
-                        ? 'bg-purple-600 text-white shadow-md shadow-purple-200'
+                        ? tab.key === 'testing'
+                          ? 'bg-teal-600 text-white shadow-md shadow-teal-200'
+                          : 'bg-purple-600 text-white shadow-md shadow-purple-200'
                         : 'bg-white border border-slate-200 text-slate-600 hover:border-purple-200 hover:text-purple-600'
                     }`}
                   >
@@ -417,6 +443,31 @@ export default function Payments() {
                   </button>
                 ))}
               </div>
+
+              {/* ── ₹10 Test Payment Banner ── */}
+              <motion.div
+                initial={{ opacity: 0, y: -8 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="flex items-start gap-3 p-4 bg-gradient-to-r from-teal-50 to-cyan-50 rounded-2xl border border-teal-200 cursor-pointer group hover:border-teal-400 hover:shadow-md hover:shadow-teal-100 transition-all"
+                onClick={() => {
+                  const testItem = PAYMENT_ITEMS.find(p => p.isTestPayment)!
+                  handleSelect(testItem)
+                }}
+              >
+                <div className="w-10 h-10 rounded-xl bg-teal-100 flex items-center justify-center shrink-0 group-hover:bg-teal-200 transition-colors">
+                  <FlaskConical className="w-5 h-5 text-teal-600" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-bold text-teal-800 flex items-center gap-2">
+                    Try a ₹10 Test Payment
+                    <span className="text-[10px] font-bold bg-teal-600 text-white px-2 py-0.5 rounded-full">Recommended</span>
+                  </p>
+                  <p className="text-xs text-teal-700/80 mt-0.5 leading-relaxed">
+                    Before buying a plan, verify your UPI setup works correctly. ₹10 is refunded or credited as MedAI wallet balance.
+                  </p>
+                </div>
+                <ArrowRight className="w-4 h-4 text-teal-400 group-hover:text-teal-600 group-hover:translate-x-1 transition-all shrink-0 mt-1" />
+              </motion.div>
 
               <div className="grid gap-3">
                 {filtered.map((item, i) => (
@@ -428,9 +479,18 @@ export default function Payments() {
                     whileHover={{ y: -2, scale: 1.005 }}
                     whileTap={{ scale: 0.99 }}
                     onClick={() => handleSelect(item)}
-                    className="w-full flex items-center gap-4 p-4 bg-white rounded-2xl border border-slate-200/60 hover:border-purple-200 hover:shadow-md hover:shadow-purple-50 transition-all text-left group relative overflow-hidden"
+                    className={`w-full flex items-center gap-4 p-4 rounded-2xl border transition-all text-left group relative overflow-hidden ${
+                      item.isTestPayment
+                        ? 'bg-teal-50/70 border-teal-200 hover:border-teal-400 hover:shadow-md hover:shadow-teal-100'
+                        : 'bg-white border-slate-200/60 hover:border-purple-200 hover:shadow-md hover:shadow-purple-50'
+                    }`}
                   >
-                    {item.popular && (
+                    {item.isTestPayment && (
+                      <div className="absolute top-0 right-0 bg-gradient-to-r from-teal-500 to-cyan-500 text-white text-[10px] font-bold px-3 py-1 rounded-bl-xl">
+                        🔬 Test
+                      </div>
+                    )}
+                    {item.popular && !item.isTestPayment && (
                       <div className="absolute top-0 right-0 bg-gradient-to-r from-purple-600 to-violet-500 text-white text-[10px] font-bold px-3 py-1 rounded-bl-xl">
                         Popular
                       </div>
@@ -439,15 +499,15 @@ export default function Payments() {
                       <item.icon className={`w-6 h-6 ${item.color}`} />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="font-bold text-slate-800 text-sm group-hover:text-purple-700 transition-colors">{item.title}</p>
+                      <p className={`font-bold text-sm transition-colors ${item.isTestPayment ? 'text-teal-800 group-hover:text-teal-900' : 'text-slate-800 group-hover:text-purple-700'}`}>{item.title}</p>
                       <p className="text-xs text-slate-500 mt-0.5 line-clamp-1">{item.description}</p>
                     </div>
                     <div className="flex items-center gap-3 shrink-0">
                       <div className="text-right">
-                        <p className="font-black text-slate-900 text-xl">₹{item.amount}</p>
+                        <p className={`font-black text-xl ${item.isTestPayment ? 'text-teal-700' : 'text-slate-900'}`}>₹{item.amount}</p>
                         <p className="text-[10px] text-slate-400">{item.category === 'subscription' ? '/month' : 'one-time'}</p>
                       </div>
-                      <ArrowRight className="w-4 h-4 text-slate-300 group-hover:text-purple-500 group-hover:translate-x-1 transition-all" />
+                      <ArrowRight className={`w-4 h-4 transition-all group-hover:translate-x-1 ${item.isTestPayment ? 'text-teal-300 group-hover:text-teal-600' : 'text-slate-300 group-hover:text-purple-500'}`} />
                     </div>
                   </motion.button>
                 ))}
@@ -554,6 +614,21 @@ export default function Payments() {
                   <Shield className="w-3.5 h-3.5 text-amber-500 shrink-0" />
                   <span>Pay <strong className="text-slate-700">exactly ₹{selected.amount}.00</strong> — don't change the amount or it won't match</span>
                 </div>
+
+                {/* ── ₹10 test payment note ── */}
+                {selected.isTestPayment && (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className="flex items-start gap-2.5 bg-teal-50 border border-teal-200 rounded-2xl px-4 py-3 w-full"
+                  >
+                    <FlaskConical className="w-4 h-4 text-teal-600 mt-0.5 shrink-0" />
+                    <p className="text-xs text-teal-800 leading-relaxed">
+                      <strong>Test Payment:</strong> This ₹10 is just to verify your UPI is working. After we confirm,
+                      it will be <strong>refunded or credited</strong> to your MedAI wallet balance. 🎉
+                    </p>
+                  </motion.div>
+                )}
               </div>
 
               {/* User phone number for self-receipt */}
@@ -633,11 +708,17 @@ export default function Payments() {
               </motion.div>
 
               <div>
-                <h2 className="text-2xl font-black text-slate-900 mb-2">Payment Done! 🎉</h2>
+                <h2 className="text-2xl font-black text-slate-900 mb-2">
+                  {selected?.isTestPayment ? 'Test Payment Sent! 🔬' : 'Payment Done! 🎉'}
+                </h2>
                 <p className="text-slate-500 text-sm leading-relaxed max-w-xs mx-auto">
-                  {adminNotified
-                    ? <>✅ <strong className="text-emerald-600">MedAI team was auto-notified</strong> via WhatsApp! Now send your payment screenshot to confirm.</>
-                    : <>Now send your <strong className="text-slate-700">payment screenshot</strong> on WhatsApp so we can verify and activate <strong className="text-slate-700">{selected?.title}</strong>.</>
+                  {selected?.isTestPayment
+                    ? adminNotified
+                      ? <>✅ <strong className="text-teal-600">MedAI team notified</strong> via WhatsApp! We'll credit ₹10 to your wallet soon.</>
+                      : <>Send your <strong className="text-slate-700">₹10 payment screenshot</strong> on WhatsApp so we can verify and credit your MedAI balance.</>
+                    : adminNotified
+                      ? <>✅ <strong className="text-emerald-600">MedAI team was auto-notified</strong> via WhatsApp! Now send your payment screenshot to confirm.</>
+                      : <>Now send your <strong className="text-slate-700">payment screenshot</strong> on WhatsApp so we can verify and activate <strong className="text-slate-700">{selected?.title}</strong>.</>
                   }
                 </p>
               </div>

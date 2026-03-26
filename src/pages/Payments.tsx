@@ -48,7 +48,7 @@ import { getStoredUser } from '../lib/auth'
 // CONFIGURE YOUR PERSONAL UPI DETAILS HERE
 // Or set them in your .env file (recommended)
 // ─────────────────────────────────────────────────────────────
-const UPI_ID        = import.meta.env.VITE_UPI_ID        || '6303089945@ybl'
+const UPI_ID        = import.meta.env.VITE_UPI_ID        || '6303089945@mbk'
 const MERCHANT_NAME = import.meta.env.VITE_MERCHANT_NAME || 'R SAI PRASAD'
 // YOUR personal WhatsApp (admin) — with country code, no + or spaces
 // India +91 6303089945
@@ -370,12 +370,12 @@ export default function Payments() {
             </div>
             <div>
               <h1 className="text-2xl font-black text-slate-900">
-                {step === 'select' ? 'Pay via PhonePe / UPI'
+                {step === 'select' ? 'Pay via UPI / Mobiquick'
                   : step === 'pay' ? 'Scan & Pay'
                   : 'Payment Sent! 🎉'}
               </h1>
               <p className="text-sm text-slate-500">
-                {step === 'select' ? 'Personal UPI — PhonePe, GPay, Paytm accepted'
+                {step === 'select' ? 'Mobiquick (@mbk) · PhonePe · GPay · Paytm'
                   : step === 'pay' ? `Paying to: ${UPI_ID}`
                   : 'Send your screenshot to activate'}
               </p>
@@ -571,8 +571,8 @@ export default function Payments() {
                     <Smartphone className="w-4.5 h-4.5 text-white" />
                   </div>
                   <div>
-                    <p className="font-bold text-slate-800 text-sm">Scan with PhonePe / GPay / Paytm</p>
-                    <p className="text-[10px] text-slate-400">or open UPI app and enter ID manually</p>
+                    <p className="font-bold text-slate-800 text-sm">Scan with PhonePe / GPay / Paytm / Mobiquick</p>
+                    <p className="text-[10px] text-slate-400">or open any UPI app and enter ID manually</p>
                   </div>
                 </div>
 
@@ -588,13 +588,16 @@ export default function Payments() {
 
                 {/* UPI ID display — big & copyable */}
                 <div className="flex flex-col items-center gap-2 w-full bg-slate-50 rounded-2xl p-4 border border-slate-100">
-                  <p className="text-[10px] text-slate-500 font-semibold uppercase tracking-wider">Personal UPI ID</p>
+                  <div className="flex items-center gap-1.5 mb-0.5">
+                    <span className="text-[10px] text-slate-500 font-semibold uppercase tracking-wider">Mobiquick Wallet</span>
+                    <span className="text-[9px] font-bold bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded-full">@mbk</span>
+                  </div>
                   <div className="flex items-center gap-2">
-                    {/* PhonePe brand color for the @ symbol */}
+                    {/* Mobiquick blue for the @mbk part */}
                     <code className="text-lg font-black text-slate-900 tracking-wide">
                       {UPI_ID.split('@')[0]}
-                      <span className="text-[#5f259f]">@</span>
-                      {UPI_ID.split('@')[1]}
+                      <span className="text-blue-600">@</span>
+                      <span className="text-blue-700">{UPI_ID.split('@')[1]}</span>
                     </code>
                   </div>
                   <CopyButton text={UPI_ID} label="Copy UPI ID" />

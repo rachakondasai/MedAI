@@ -139,6 +139,31 @@ async def logout(user: dict = Depends(auth.require_auth)):
     return auth.logout(user["token"])
 
 
+@app.post("/api/auth/google")
+async def google_auth(request: Request):
+    """
+    Sign in or sign up with a Google ID token.
+    Body: { id_token: string, provided_name?: string }
+    Returns either { needs_username: true, email, suggested_name }
+    or { token, user, is_new_user }.
+    """
+    body = await request.json()
+    id_token = body.get("id_token", "")
+    provided_name = body.get("provided_name")
+
+    if not id_token:
+        raise HTTPException(status_code=400, detail="id_token is required.")
+
+    # Verify with Google
+    google_payload = await auth.verify_google_token(id_token)
+    google_payload["provided_name"] = provided_name
+
+    ip = request.client.host if request.client else None
+    ua = request.headers.get("user-agent")
+
+    return auth.google_auth(google_payload, ip_address=ip, user_agent=ua)
+
+
 @app.get("/api/auth/me")
 async def get_me(user: dict = Depends(auth.require_auth)):
     """Get the currently authenticated user's info."""

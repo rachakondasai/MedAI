@@ -5,7 +5,7 @@ import {
   LayoutDashboard, Bot, FileText, Building2, Pill,
   Clock, BookOpen, Settings, Shield, X, Sparkles,
   ChevronRight, Heart, Brain, GraduationCap,
-  FlaskConical, Gift, Crown,
+  FlaskConical, Gift, Crown, QrCode,
 } from 'lucide-react'
 import type { AuthUser } from '../lib/auth'
 
@@ -19,6 +19,7 @@ const NAV_ITEMS = [
 
 const MORE_ITEMS = [
   { to: '/appointments', icon: FlaskConical, label: 'Book Blood Test',   desc: 'Book a lab test near you',    color: 'from-teal-500 to-cyan-600' },
+  { to: '/payments',     icon: QrCode,       label: 'Pay via PhonePe',   desc: 'UPI / QR code payment',       color: 'from-purple-500 to-violet-600' },
   { to: '/referrals',    icon: Gift,          label: 'Referral Earnings', desc: 'Earn 15% commissions',       color: 'from-violet-500 to-purple-600' },
   { to: '/subscriptions',icon: Crown,         label: 'Plans & Pricing',   desc: 'Upgrade to Pro or Elite',    color: 'from-amber-500 to-orange-500' },
   { to: '/learn',        icon: GraduationCap, label: 'Learning Lab',      desc: 'AI-powered courses',         color: 'from-indigo-500 to-blue-600' },

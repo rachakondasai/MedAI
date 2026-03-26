@@ -1,5 +1,6 @@
 """
 MedAI Auth — JWT-based authentication for user signup, login, and session management.
+Supports email/password AND Google OAuth (ID token verification).
 """
 
 import hashlib
@@ -8,12 +9,17 @@ import json
 import os
 from datetime import datetime, timezone, timedelta
 from base64 import urlsafe_b64encode, urlsafe_b64decode
+from typing import Optional
 
+import httpx
 from fastapi import HTTPException, Request, Depends
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from pydantic import BaseModel, EmailStr
 
 import database as db
+
+# Google OAuth client ID — set GOOGLE_CLIENT_ID in .env
+GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID", "")
 
 # Secret key for JWT signing — MUST be stable across restarts.
 # Set JWT_SECRET in your .env file for production use.
@@ -34,6 +40,10 @@ class SignupRequest(BaseModel):
 class LoginRequest(BaseModel):
     email: str
     password: str
+
+class GoogleAuthRequest(BaseModel):
+    id_token: str
+    name: Optional[str] = None  # provided on first-time signup when user sets username
 
 class AuthResponse(BaseModel):
     token: str
@@ -61,6 +71,83 @@ def verify_password(password: str, stored_hash: str) -> bool:
         return hmac.compare_digest(hashed, check)
     except Exception:
         return False
+
+
+# --- Google OAuth ---
+
+async def verify_google_token(id_token: str) -> dict:
+    """Verify a Google ID token and return the payload (email, name, sub)."""
+    try:
+        async with httpx.AsyncClient(timeout=10) as client:
+            # Use Google's tokeninfo endpoint for verification
+            resp = await client.get(
+                "https://oauth2.googleapis.com/tokeninfo",
+                params={"id_token": id_token},
+            )
+            if resp.status_code != 200:
+                raise HTTPException(status_code=401, detail="Invalid Google token.")
+            data = resp.json()
+            # Verify audience if GOOGLE_CLIENT_ID is configured
+            if GOOGLE_CLIENT_ID and data.get("aud") != GOOGLE_CLIENT_ID:
+                raise HTTPException(status_code=401, detail="Google token audience mismatch.")
+            if data.get("email_verified") != "true":
+                raise HTTPException(status_code=401, detail="Google email not verified.")
+            return data
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=401, detail=f"Google token verification failed: {str(e)}")
+
+
+def google_auth(req_data: dict, ip_address: str = None, user_agent: str = None) -> dict:
+    """
+    Sign in or sign up with a verified Google payload.
+    Returns AuthResponse dict plus 'is_new_user' flag.
+    If is_new_user=True and name was not provided, the client should prompt for a username.
+    """
+    email = req_data["email"]
+    google_name = req_data.get("name") or req_data.get("given_name", "") + " " + req_data.get("family_name", "")
+    google_name = google_name.strip() or email.split("@")[0]
+    provided_name = req_data.get("provided_name")  # name sent from the username-prompt step
+
+    existing = db.get_user_by_email(email)
+    is_new_user = existing is None
+
+    if is_new_user:
+        # If no name provided yet, tell the client to prompt for a username
+        if not provided_name:
+            return {
+                "needs_username": True,
+                "email": email,
+                "suggested_name": google_name,
+            }
+        # Create the user with the provided name
+        final_name = provided_name.strip() or google_name
+        # Use a random unusable password hash (Google users don't use password login)
+        pw_hash = hash_password(os.urandom(32).hex())
+        user = db.create_user(email=email, name=final_name, password_hash=pw_hash)
+    else:
+        user = existing
+
+    # Create JWT
+    expiry = datetime.now(timezone.utc) + timedelta(hours=TOKEN_EXPIRY_HOURS)
+    token = create_jwt({
+        "sub": user["id"],
+        "email": user["email"],
+        "name": user["name"],
+        "role": user["role"],
+        "exp": expiry.isoformat(),
+    })
+    db.create_session(user_id=user["id"], token=token, expires_at=expiry.isoformat(),
+                      ip_address=ip_address, user_agent=user_agent)
+    db.update_last_login(user["id"])
+
+    return {
+        "needs_username": False,
+        "is_new_user": is_new_user,
+        "token": token,
+        "user": {"id": user["id"], "email": user["email"], "name": user["name"], "role": user["role"]},
+    }
 
 
 # --- JWT Token ---

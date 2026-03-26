@@ -18,6 +18,7 @@ import {
   FlaskConical,
   Crown,
   Gift,
+  QrCode,
 } from 'lucide-react'
 import { logout, type AuthUser } from '../lib/auth'
 
@@ -29,6 +30,7 @@ const navItems = [
   { to: '/medicines', icon: Pill, label: 'Medicines', badge: null, group: 'core' },
   { to: '/history', icon: Clock, label: 'History', badge: null, group: 'core' },
   { to: '/appointments', icon: FlaskConical, label: 'Book Blood Test', badge: 'Pro', group: 'premium' },
+  { to: '/payments', icon: QrCode, label: 'Pay via PhonePe', badge: 'UPI', group: 'premium' },
   { to: '/referrals', icon: Gift, label: 'Referral Earnings', badge: 'Elite', group: 'premium' },
   { to: '/subscriptions', icon: Crown, label: 'Plans & Pricing', badge: null, group: 'premium' },
   { to: '/learn', icon: BookOpen, label: 'Learning Lab', badge: '3D', group: 'tools' },

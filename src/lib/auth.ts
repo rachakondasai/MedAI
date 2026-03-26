@@ -111,6 +111,31 @@ export async function login(email: string, password: string): Promise<AuthUser> 
   return data.user
 }
 
+export interface GoogleAuthResult {
+  needs_username: boolean
+  email?: string
+  suggested_name?: string
+  token?: string
+  user?: AuthUser
+  is_new_user?: boolean
+}
+
+/**
+ * Sign in or sign up with a Google ID token.
+ * If needs_username=true, call googleSignIn again with providedName set.
+ */
+export async function googleSignIn(idToken: string, providedName?: string): Promise<GoogleAuthResult> {
+  const data = await authRequest('/api/auth/google', {
+    method: 'POST',
+    body: JSON.stringify({ id_token: idToken, provided_name: providedName || null }),
+  })
+  if (!data.needs_username && data.token && data.user) {
+    setToken(data.token)
+    storeUser(data.user)
+  }
+  return data
+}
+
 export async function logout(): Promise<void> {
   try {
     await authRequest('/api/auth/logout', { method: 'POST' })

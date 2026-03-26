@@ -26,12 +26,110 @@ import {
   Star,
   Globe,
   Lock,
+  Languages,
+  ChevronDown,
 } from 'lucide-react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import ChatMessage from '../components/ChatMessage'
 import ChatInput from '../components/ChatInput'
 import { sendChatMessage, uploadReportInChat, checkBackendHealth, type ChatResponse } from '../lib/api'
 
+// Language support
+const LANGUAGES = [
+  { code: 'en', label: 'English', flag: '🇺🇸' },
+  { code: 'te', label: 'Telugu', flag: '🇮🇳' },
+  { code: 'hi', label: 'Hindi', flag: '🇮🇳' },
+  { code: 'ur', label: 'Urdu', flag: '🇵🇰' },
+  { code: 'ta', label: 'Tamil', flag: '🇮🇳' },
+  { code: 'kn', label: 'Kannada', flag: '🇮🇳' },
+  { code: 'ml', label: 'Malayalam', flag: '🇮🇳' },
+  { code: 'bn', label: 'Bengali', flag: '🇮🇳' },
+  { code: 'mr', label: 'Marathi', flag: '🇮🇳' },
+  { code: 'ar', label: 'Arabic', flag: '🇸🇦' },
+  { code: 'fr', label: 'French', flag: '🇫🇷' },
+  { code: 'es', label: 'Spanish', flag: '🇪🇸' },
+  { code: 'de', label: 'German', flag: '🇩🇪' },
+  { code: 'zh', label: 'Chinese', flag: '🇨🇳' },
+] as const
+
+type LangCode = typeof LANGUAGES[number]['code']
+
+const LANGUAGE_SYSTEM_PROMPT: Record<LangCode, string> = {
+  en: '',
+  te: 'Please respond entirely in Telugu (తెలుగు) script. Use simple, clear Telugu that a patient can understand.',
+  hi: 'Please respond entirely in Hindi (हिंदी). Use simple, clear Hindi that a patient can understand.',
+  ur: 'Please respond entirely in Urdu (اردو). Use simple, clear Urdu that a patient can understand.',
+  ta: 'Please respond entirely in Tamil (தமிழ்). Use simple, clear Tamil that a patient can understand.',
+  kn: 'Please respond entirely in Kannada (ಕನ್ನಡ). Use simple, clear Kannada that a patient can understand.',
+  ml: 'Please respond entirely in Malayalam (മലയാളം). Use simple, clear Malayalam that a patient can understand.',
+  bn: 'Please respond entirely in Bengali (বাংলা). Use simple, clear Bengali that a patient can understand.',
+  mr: 'Please respond entirely in Marathi (मराठी). Use simple, clear Marathi that a patient can understand.',
+  ar: 'Please respond entirely in Arabic (العربية). Use simple, clear Arabic that a patient can understand.',
+  fr: 'Répondez entièrement en français. Utilisez un langage simple et clair.',
+  es: 'Responde completamente en español. Usa un lenguaje simple y claro.',
+  de: 'Bitte antworten Sie vollständig auf Deutsch. Verwenden Sie eine einfache, klare Sprache.',
+  zh: '请完全用中文（简体）回答。使用患者能理解的简洁语言。',
+}
+
+function LanguageSelector({
+  value,
+  onChange,
+}: {
+  value: LangCode
+  onChange: (lang: LangCode) => void
+}) {
+  const [open, setOpen] = useState(false)
+  const current = LANGUAGES.find(l => l.code === value)!
+
+  return (
+    <div className="relative">
+      <motion.button
+        whileHover={{ scale: 1.02 }}
+        whileTap={{ scale: 0.97 }}
+        onClick={() => setOpen(o => !o)}
+        className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white/80 border border-slate-200/60 text-xs font-semibold text-slate-700 hover:bg-white transition-all shadow-sm backdrop-blur-sm"
+      >
+        <Languages className="w-3.5 h-3.5 text-blue-500" />
+        <span>{current.flag}</span>
+        <span>{current.label}</span>
+        <ChevronDown className={`w-3 h-3 text-slate-400 transition-transform ${open ? 'rotate-180' : ''}`} />
+      </motion.button>
+
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            initial={{ opacity: 0, y: -8, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -8, scale: 0.95 }}
+            transition={{ duration: 0.15 }}
+            className="absolute right-0 top-full mt-2 w-44 bg-white rounded-2xl border border-slate-200/60 shadow-xl shadow-slate-200/60 z-50 overflow-hidden"
+            onMouseLeave={() => setOpen(false)}
+          >
+            <div className="p-1.5 max-h-72 overflow-y-auto">
+              {LANGUAGES.map(lang => (
+                <button
+                  key={lang.code}
+                  onClick={() => { onChange(lang.code); setOpen(false) }}
+                  className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-xs font-medium transition-all ${
+                    value === lang.code
+                      ? 'bg-blue-50 text-blue-700 font-bold'
+                      : 'text-slate-700 hover:bg-slate-50'
+                  }`}
+                >
+                  <span className="text-base">{lang.flag}</span>
+                  <span>{lang.label}</span>
+                  {value === lang.code && (
+                    <span className="ml-auto text-[10px] bg-blue-100 text-blue-600 px-1.5 py-0.5 rounded-full font-bold">Active</span>
+                  )}
+                </button>
+              ))}
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  )
+}
 interface Message {
   role: 'user' | 'ai'
   content: string
@@ -62,6 +160,7 @@ export default function AIDoctor({ userLocation = '' }: { userLocation?: string 
   const [isUploading, setIsUploading] = useState(false)
   const [backendOnline, setBackendOnline] = useState<boolean | null>(null)
   const [selectedModel, setSelectedModel] = useState('gpt-4o')
+  const [selectedLanguage, setSelectedLanguage] = useState<LangCode>('en')
   const bottomRef = useRef<HTMLDivElement>(null)
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
@@ -138,7 +237,13 @@ export default function AIDoctor({ userLocation = '' }: { userLocation?: string 
         .filter((m) => m.role === 'user' || m.role === 'ai')
         .map((m) => ({ role: m.role === 'ai' ? 'assistant' : 'user', content: m.content }))
 
-      const response: ChatResponse = await sendChatMessage(text, history, userLocation || undefined, selectedModel)
+      // Prepend language instruction as a system message if not English
+      const langPrompt = LANGUAGE_SYSTEM_PROMPT[selectedLanguage]
+      const fullHistory = langPrompt
+        ? [{ role: 'system', content: langPrompt }, ...history]
+        : history
+
+      const response: ChatResponse = await sendChatMessage(text, fullHistory, userLocation || undefined, selectedModel)
 
       const aiMsg: Message = {
         role: 'ai',
@@ -484,6 +589,23 @@ export default function AIDoctor({ userLocation = '' }: { userLocation?: string 
         </div>
 
         {/* Chat Input */}
+        <div className="px-6 py-2 flex items-center justify-between gap-3 border-t border-slate-100/60 bg-white/50 backdrop-blur-sm">
+          {/* Language selector */}
+          <div className="flex items-center gap-2">
+            <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Reply in:</span>
+            <LanguageSelector value={selectedLanguage} onChange={setSelectedLanguage} />
+          </div>
+          {selectedLanguage !== 'en' && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="flex items-center gap-1.5 text-[10px] font-semibold text-blue-600 bg-blue-50 px-2.5 py-1 rounded-full border border-blue-100"
+            >
+              <Globe className="w-3 h-3" />
+              AI will reply in {LANGUAGES.find(l => l.code === selectedLanguage)?.label}
+            </motion.div>
+          )}
+        </div>
         <ChatInput
           onSend={handleSend}
           onFileUpload={handleFileUpload}

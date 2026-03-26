@@ -48,11 +48,11 @@ import { getStoredUser } from '../lib/auth'
 // CONFIGURE YOUR PERSONAL UPI DETAILS HERE
 // Or set them in your .env file (recommended)
 // ─────────────────────────────────────────────────────────────
-const UPI_ID        = import.meta.env.VITE_UPI_ID        || '9876543210@ybl'
-const MERCHANT_NAME = import.meta.env.VITE_MERCHANT_NAME || 'MedAI'
+const UPI_ID        = import.meta.env.VITE_UPI_ID        || '6303089935@ybl'
+const MERCHANT_NAME = import.meta.env.VITE_MERCHANT_NAME || 'R SAI PRASAD'
 // YOUR personal WhatsApp (admin) — with country code, no + or spaces
-// e.g. 919876543210 for India +91 9876543210
-const ADMIN_WHATSAPP = import.meta.env.VITE_WHATSAPP_NO || '919876543210'
+// India +91 6303089935
+const ADMIN_WHATSAPP = import.meta.env.VITE_WHATSAPP_NO || '916303089935'
 
 // ─────────────────────────────────────────────────────────────
 // PAYMENT ITEMS

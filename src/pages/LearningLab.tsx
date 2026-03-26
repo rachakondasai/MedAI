@@ -1,5 +1,6 @@
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useCallback, useRef, lazy, Suspense } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+const ArchitectureScene3D = lazy(() => import('../components/ArchitectureScene3D'))
 import {
   BookOpen, Brain, Zap, Trophy, Star, Sparkles, Check, X,
   ChevronRight, ChevronLeft, ArrowRight, Flame, Target, Award,
@@ -725,6 +726,7 @@ function ArchitectureDiagram3D({ onClose }: { onClose: () => void }) {
   const [completedSteps, setCompletedSteps] = useState<number[]>([])
   const [flowFinished, setFlowFinished] = useState(false)
   const [showStats, setShowStats] = useState(true)
+  const [view3D, setView3D] = useState(false)
   const flowTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const nx = (pct: number) => (pct / 100) * 1200
@@ -805,17 +807,58 @@ function ArchitectureDiagram3D({ onClose }: { onClose: () => void }) {
           </div>
         </div>
         <div className="flex items-center gap-3">
+          {/* 3D View toggle */}
+          <motion.button whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.96 }}
+            onClick={() => setView3D(!view3D)}
+            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold shadow-sm transition-all ${view3D ? 'bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-indigo-500/25' : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'}`}>
+            <Boxes className="w-4 h-4" />{view3D ? '2D Diagram' : '3D View ✨'}
+          </motion.button>
           <motion.button whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.96 }}
             onClick={() => setShowStats(!showStats)}
             className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 shadow-sm transition-all">
             <BarChart3 className="w-4 h-4" />{showStats ? 'Hide Stats' : 'Show Stats'}
           </motion.button>
-          <motion.button whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.96 }} onClick={startFlow} disabled={flowActive}
-            className={`flex items-center gap-2 px-6 py-2.5 rounded-xl font-semibold text-sm shadow-lg transition-all ${flowActive ? 'bg-slate-200 text-slate-400 cursor-wait' : 'bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-emerald-500/25 hover:shadow-xl hover:shadow-emerald-500/30'}`}>
+          <motion.button whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.96 }} onClick={startFlow} disabled={flowActive || view3D}
+            className={`flex items-center gap-2 px-6 py-2.5 rounded-xl font-semibold text-sm shadow-lg transition-all ${flowActive || view3D ? 'bg-slate-200 text-slate-400 cursor-not-allowed' : 'bg-gradient-to-r from-emerald-500 to-teal-600 text-white shadow-emerald-500/25 hover:shadow-xl hover:shadow-emerald-500/30'}`}>
             {flowActive && !flowFinished ? <><Loader2 className="w-4 h-4 animate-spin" />Simulating...</> : flowFinished ? <><CheckCircle2 className="w-4 h-4" />Complete</> : <><Play className="w-4 h-4" />Run Data Flow</>}
           </motion.button>
         </div>
       </div>
+
+      {/* ── 3D Scene (when toggled) ── */}
+      <AnimatePresence>
+        {view3D && (
+          <motion.div
+            key="scene3d"
+            initial={{ opacity: 0, y: 24, scale: 0.97 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 24, scale: 0.97 }}
+            transition={{ type: 'spring', stiffness: 120, damping: 20 }}
+            className="mb-6"
+          >
+            {/* Header bar above canvas */}
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <span className="inline-flex items-center gap-1.5 text-xs font-bold text-indigo-400 bg-indigo-500/10 border border-indigo-500/20 px-3 py-1.5 rounded-full">
+                  <Boxes className="w-3.5 h-3.5" />
+                  React Three Fiber · Framer Motion 3D
+                </span>
+                <span className="text-xs text-slate-400">Hover a layer to explode the view · Click "Neural Pulse" to trace data flow</span>
+              </div>
+            </div>
+            <Suspense fallback={
+              <div className="w-full rounded-3xl bg-[#060b1a] flex items-center justify-center" style={{ height: 520 }}>
+                <div className="flex flex-col items-center gap-3">
+                  <Loader2 className="w-8 h-8 text-indigo-400 animate-spin" />
+                  <p className="text-slate-400 text-sm font-medium">Loading 3D scene…</p>
+                </div>
+              </div>
+            }>
+              <ArchitectureScene3D />
+            </Suspense>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* ── Stats KPI Bar ── */}
       <AnimatePresence>

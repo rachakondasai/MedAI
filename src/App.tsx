@@ -1,10 +1,12 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, lazy, Suspense } from 'react'
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { AnimatePresence } from 'framer-motion'
 import Sidebar from './components/Sidebar'
 import Header from './components/Header'
 import MobileNav from './components/MobileNav'
 import PageTransition from './components/PageTransition'
+import OnboardingBanner from './components/OnboardingBanner'
+import ToastContainer from './components/Toast'
 import Dashboard from './pages/Dashboard'
 import AIDoctor from './pages/AIDoctor'
 import MedicalReports from './pages/MedicalReports'
@@ -14,13 +16,10 @@ import History from './pages/History'
 import Settings from './pages/Settings'
 import AdminDashboard from './pages/AdminDashboard'
 import Login from './pages/Login'
-import LearningLab from './pages/LearningLab'
-import Subscriptions from './pages/Subscriptions'
 import Appointments from './pages/Appointments'
-import Referrals from './pages/Referrals'
-import Payments from './pages/Payments'
 import Orders from './pages/Orders'
 import AdminOrders from './pages/AdminOrders'
+const LearningLab = lazy(() => import('./pages/LearningLab'))
 import { isAuthenticated, isAdmin, getStoredUser, type AuthUser } from './lib/auth'
 import { useUserLocation } from './lib/useLocation'
 import { Menu } from 'lucide-react'
@@ -82,12 +81,16 @@ export default function App() {
               <Route path="/medicines" element={<PageTransition id="/medicines"><Medicines /></PageTransition>} />
               <Route path="/history" element={<PageTransition id="/history"><History /></PageTransition>} />
               <Route path="/settings" element={<PageTransition id="/settings"><Settings /></PageTransition>} />
-              <Route path="/learn" element={<PageTransition id="/learn"><LearningLab /></PageTransition>} />
-              <Route path="/subscriptions" element={<PageTransition id="/subscriptions"><Subscriptions /></PageTransition>} />
+              <Route path="/learn" element={
+                <PageTransition id="/learn">
+                  <Suspense fallback={<div className="flex items-center justify-center h-64"><div className="w-8 h-8 rounded-full border-2 border-blue-200 border-t-blue-500 animate-spin" /></div>}>
+                    <LearningLab />
+                  </Suspense>
+                </PageTransition>
+              } />
               <Route path="/appointments" element={<PageTransition id="/appointments"><Appointments /></PageTransition>} />
-              <Route path="/referrals" element={<PageTransition id="/referrals"><Referrals /></PageTransition>} />
-              <Route path="/payments" element={<PageTransition id="/payments"><Payments /></PageTransition>} />
               <Route path="/orders" element={<PageTransition id="/orders"><Orders /></PageTransition>} />
+              {/* Removed: /subscriptions, /referrals, /payments */}
               <Route
                 path="/admin"
                 element={
@@ -110,6 +113,8 @@ export default function App() {
       </div>
 
       <MobileNav user={user} />
+      <OnboardingBanner />
+      <ToastContainer />
     </div>
   )
 }

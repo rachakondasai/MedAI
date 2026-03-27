@@ -114,29 +114,21 @@ export default function History() {
   })
 
   return (
-    <div className="min-h-full relative">
-      {/* Ambient mesh background */}
-      <div className="fixed inset-0 pointer-events-none -z-10">
-        <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-gradient-to-bl from-indigo-100/30 via-blue-50/15 to-transparent rounded-full blur-3xl" />
-        <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-gradient-to-tr from-violet-100/25 via-purple-50/10 to-transparent rounded-full blur-3xl" />
-      </div>
-    <div className="p-6 max-w-5xl mx-auto space-y-6 pb-12">
-      {/* Header — Premium */}
+    <div className="min-h-full">
+      <div className="p-4 md:p-6 max-w-5xl mx-auto space-y-5 pb-8">
+      {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: -15 }}
         animate={{ opacity: 1, y: 0 }}
-        className="flex items-center justify-between"
+        className="flex items-center justify-between pt-1"
       >
         <div className="flex items-center gap-3">
-          <motion.div
-            whileHover={{ rotate: [0, -8, 8, 0] }}
-            className="w-11 h-11 rounded-xl bg-gradient-to-br from-slate-700 to-slate-900 flex items-center justify-center shadow-lg shadow-slate-500/20"
-          >
+          <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-slate-700 to-slate-900 flex items-center justify-center shadow-lg shadow-slate-500/20 flex-shrink-0">
             <Clock className="w-5 h-5 text-white" />
-          </motion.div>
+          </div>
           <div>
-            <h2 className="text-xl font-bold text-slate-900 tracking-tight">Activity History</h2>
-            <p className="text-xs text-slate-400 mt-0.5">Your interactions with MedAI</p>
+            <h2 className="text-lg font-extrabold text-slate-900">Activity History</h2>
+            <p className="text-xs text-slate-400">Your MedAI interactions</p>
           </div>
         </div>
         <motion.button
@@ -157,7 +149,7 @@ export default function History() {
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.05 }}
-          className="grid grid-cols-3 gap-4"
+          className="grid grid-cols-3 gap-2.5 sm:gap-4"
         >
           {[
             { label: 'Total Activities', value: stats.total, icon: TrendingUp, color: 'emerald', gradient: 'from-emerald-500 to-teal-600' },
@@ -170,16 +162,16 @@ export default function History() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.05 + i * 0.06 }}
               whileHover={{ y: -3, scale: 1.02 }}
-              className="bg-white/70 backdrop-blur-xl rounded-2xl border border-slate-200/50 p-4 hover:shadow-xl shadow-lg shadow-slate-500/5 transition-all duration-300"
+              className="bg-white rounded-2xl border border-slate-100 p-3 sm:p-4 shadow-sm hover:shadow-md transition-all duration-300"
             >
               <div className="flex items-center justify-between mb-2">
-                <div className={`w-9 h-9 rounded-lg bg-gradient-to-br ${stat.gradient} flex items-center justify-center shadow-lg`}>
+                <div className={`w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-gradient-to-br ${stat.gradient} flex items-center justify-center shadow-md`}>
                   <stat.icon className="w-4 h-4 text-white" />
                 </div>
-                <ArrowUpRight className="w-4 h-4 text-slate-300" />
+                <ArrowUpRight className="w-3.5 h-3.5 text-slate-300" />
               </div>
-              <p className="text-2xl font-bold text-slate-900">{stat.value}</p>
-              <p className="text-[11px] text-slate-400 font-medium mt-0.5">{stat.label}</p>
+              <p className="text-xl sm:text-2xl font-bold text-slate-900">{stat.value}</p>
+              <p className="text-[10px] sm:text-[11px] text-slate-400 font-medium mt-0.5 leading-tight">{stat.label}</p>
             </motion.div>
           ))}
         </motion.div>
@@ -191,7 +183,7 @@ export default function History() {
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
-          className="flex items-center gap-3"
+          className="flex items-center gap-2 flex-wrap"
         >
           <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl">
             {([

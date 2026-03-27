@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no" />
 
     <!-- CSP meta tag — matches nginx header; allows fonts, geolocation API, blob workers, Google APIs -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' blob: https://accounts.google.com https://apis.google.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; connect-src 'self' https://nominatim.openstreetmap.org https://api.openstreetmap.org https://cdn.jsdelivr.net https://oauth2.googleapis.com https://accounts.google.com wss: ws:; img-src 'self' data: blob: https:; media-src 'self' blob:; worker-src 'self' blob:; child-src 'self' blob: https://accounts.google.com; frame-src https://accounts.google.com;" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' blob: https://accounts.google.com https://apis.google.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; connect-src 'self' https://nominatim.openstreetmap.org https://api.openstreetmap.org https://overpass-api.de https://cdn.jsdelivr.net https://oauth2.googleapis.com https://accounts.google.com wss: ws:; img-src 'self' data: blob: https:; media-src 'self' blob:; worker-src 'self' blob:; child-src 'self' blob: https://accounts.google.com; frame-src https://accounts.google.com;" />
 
     <!-- Mobile App Meta -->
     <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -24,6 +24,10 @@
     <title>MedAI — AI Healthcare Platform</title>
     <!-- Google Identity Services (GSI) — for Sign in with Google -->
     <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="/manifest.json" />
+    <!-- iOS icons -->
+    <link rel="apple-touch-icon" href="/vite.svg" />
   </head>
   <body>
     <div id="root"></div>

@@ -15,5 +15,20 @@ export default defineConfig({
   },
   build: {
     sourcemap: true, // Enable source maps for production
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          // Core React runtime
+          'vendor-react': ['react', 'react-dom', 'react-router-dom'],
+          // Animation library
+          'vendor-framer': ['framer-motion'],
+          // Charts
+          'vendor-charts': ['recharts'],
+          // Icons
+          'vendor-icons': ['lucide-react'],
+        },
+      },
+    },
+    chunkSizeWarningLimit: 800,
   },
 })

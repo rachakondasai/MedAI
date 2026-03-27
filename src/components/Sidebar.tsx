@@ -16,9 +16,6 @@ import {
   Sparkles,
   X,
   FlaskConical,
-  Crown,
-  Gift,
-  QrCode,
   PackageSearch,
 } from 'lucide-react'
 import { useState, useEffect } from 'react'
@@ -32,11 +29,8 @@ const navItems = [
   { to: '/hospitals', icon: Building2, label: 'Hospitals', badge: null, group: 'core' },
   { to: '/medicines', icon: Pill, label: 'Medicines', badge: null, group: 'core' },
   { to: '/history', icon: Clock, label: 'History', badge: null, group: 'core' },
-  { to: '/appointments', icon: FlaskConical, label: 'Book Blood Test', badge: 'New', group: 'premium' },
+  { to: '/appointments', icon: FlaskConical, label: 'Book Lab Test', badge: 'New', group: 'premium' },
   { to: '/orders', icon: PackageSearch, label: 'My Orders', badge: null, group: 'premium' },
-  { to: '/payments', icon: QrCode, label: 'Pay via UPI', badge: 'UPI', group: 'premium' },
-  { to: '/subscriptions', icon: Crown, label: 'Plans & Pricing', badge: null, group: 'premium' },
-  { to: '/referrals', icon: Gift, label: 'Referral Earnings', badge: 'Elite', group: 'premium' },
   { to: '/settings', icon: Settings, label: 'Settings', badge: null, group: 'tools' },
 ]
 

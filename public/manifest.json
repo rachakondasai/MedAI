@@ -1,0 +1,35 @@
+{
+  "name": "MedAI — AI Health Platform",
+  "short_name": "MedAI",
+  "description": "AI-powered healthcare: book lab tests, consult AI doctor, find hospitals and medicines",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f8fafc",
+  "theme_color": "#0ea5e9",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/vite.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["health", "medical", "lifestyle"],
+  "shortcuts": [
+    {
+      "name": "Book Lab Test",
+      "short_name": "Book Test",
+      "description": "Quickly book a lab test near you",
+      "url": "/appointments",
+      "icons": [{ "src": "/vite.svg", "sizes": "96x96" }]
+    },
+    {
+      "name": "AI Doctor",
+      "short_name": "AI Doctor",
+      "description": "Chat with AI Doctor",
+      "url": "/ai-doctor",
+      "icons": [{ "src": "/vite.svg", "sizes": "96x96" }]
+    }
+  ]
+}

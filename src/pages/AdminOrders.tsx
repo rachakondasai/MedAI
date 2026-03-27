@@ -20,9 +20,9 @@ import {
 import { getOrders, saveOrders, type LabOrder, type OrderStatus, STATUS_CONFIG } from './Orders'
 
 // ─────────────────────────────────────────────────────────────────────────────
-// DEMO ORDERS — pre-loaded if nothing in localStorage yet
+// INITIAL ORDERS — pre-loaded on first launch if no orders exist yet
 // ─────────────────────────────────────────────────────────────────────────────
-const DEMO_ORDERS: LabOrder[] = [
+const INITIAL_ORDERS: LabOrder[] = [
   {
     id: 'ORD-001',
     testName: 'Complete Blood Count (CBC)',
@@ -346,7 +346,7 @@ export default function AdminOrders() {
   useEffect(() => {
     let stored = getOrders()
     if (stored.length === 0) {
-      stored = DEMO_ORDERS
+      stored = INITIAL_ORDERS
       saveOrders(stored)
     }
     setOrders(stored)

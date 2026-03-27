@@ -197,19 +197,23 @@ export default function Appointments() {
     // Save order to localStorage
     const selectedLab = LAB_CENTERS.find((l) => l.id === form.labId)
     const txnRef = `MEDAI-${selectedTest.id.toUpperCase()}-${Date.now().toString().slice(-6)}`
+    // Convert USD display price to INR (approx ×83) and round to nearest ₹5
+    const amountINR = Math.round((selectedTest.price * 83) / 5) * 5
     const newOrder = {
       id: `ORD-${Date.now()}`,
       testName: selectedTest.name,
       labName: selectedLab?.name || '',
       labAddress: selectedLab?.address || '',
       labPhone: '',
-      amount: Math.round(selectedTest.price * 83), // USD → INR approximate
+      amount: amountINR,
       status: 'pending_payment' as const,
       paymentStatus: 'pending' as const,
       orderedAt: new Date().toISOString(),
       collectionMode: form.mode,
       txnRef,
       userId: user?.id,
+      patientName: form.name,
+      patientPhone: form.phone,
     }
     const existing = getOrders()
     saveOrders([newOrder, ...existing])
@@ -377,8 +381,8 @@ export default function Appointments() {
                   <p className="text-xs text-slate-500 mb-3 leading-relaxed line-clamp-2">{test.description}</p>
                   <div className="flex items-center justify-between">
                     <div>
-                      <span className="text-base font-bold text-teal-600">${test.price}</span>
-                      <span className="ml-1.5 text-xs text-slate-400 line-through">${test.originalPrice}</span>
+                      <span className="text-base font-bold text-teal-600">₹{Math.round((test.price * 83) / 5) * 5}</span>
+                      <span className="ml-1.5 text-xs text-slate-400 line-through">₹{Math.round((test.originalPrice * 83) / 5) * 5}</span>
                     </div>
                     <span className="text-[11px] text-slate-400">{test.turnaround}</span>
                   </div>
@@ -407,7 +411,7 @@ export default function Appointments() {
                 <p className="text-sm font-bold text-slate-900">{selectedTest.name}</p>
                 <p className="text-xs text-slate-500">{selectedTest.includes.length} parameters • {selectedTest.turnaround}</p>
               </div>
-              <p className="text-lg font-extrabold text-teal-600">${selectedTest.price}</p>
+              <p className="text-lg font-extrabold text-teal-600">₹{Math.round((selectedTest.price * 83) / 5) * 5}</p>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -571,8 +575,14 @@ export default function Appointments() {
 
                 {/* Price */}
                 <div className="mx-6 mb-4 bg-teal-50 rounded-xl p-4 flex items-center justify-between">
-                  <span className="text-sm font-semibold text-slate-700">Total Payable</span>
-                  <span className="text-2xl font-extrabold text-teal-600">${selectedTest.price}</span>
+                  <div>
+                    <span className="text-sm font-semibold text-slate-700">Total Payable</span>
+                    <p className="text-[10px] text-slate-400 mt-0.5">Incl. all charges</p>
+                  </div>
+                  <div className="text-right">
+                    <span className="text-2xl font-extrabold text-teal-600">₹{Math.round((selectedTest.price * 83) / 5) * 5}</span>
+                    <p className="text-[10px] text-slate-400 line-through">${selectedTest.originalPrice}</p>
+                  </div>
                 </div>
 
                 <div className="p-6 pt-0">

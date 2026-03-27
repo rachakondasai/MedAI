@@ -13,9 +13,9 @@ import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   FlaskConical, CheckCircle2, Clock, Loader2, Building2,
-  MapPin, Phone, Edit3, Save, X, RefreshCw, Filter,
-  AlertCircle, User, Calendar, CreditCard, ChevronDown,
-  ChevronUp, Truck, PackageSearch, Check,
+  MapPin, Phone, Edit3, Save, X, RefreshCw,
+  Calendar, ChevronDown, ChevronUp, Truck, PackageSearch, Check,
+  Link, Upload, IndianRupee, TrendingUp, BadgeCheck, Bell,
 } from 'lucide-react'
 import { getOrders, saveOrders, type LabOrder, type OrderStatus, STATUS_CONFIG } from './Orders'
 
@@ -192,6 +192,37 @@ function EditOrderModal({
             })}
           </div>
 
+          {/* Report URL */}
+          <div>
+            <label className="block text-xs font-bold text-slate-600 mb-1.5 flex items-center gap-1.5">
+              <Upload className="w-3 h-3 text-emerald-500" />
+              Report URL / Google Drive Link
+            </label>
+            <div className="relative">
+              <Link className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400" />
+              <input
+                type="url"
+                value={form.reportUrl || ''}
+                onChange={e => set('reportUrl', e.target.value)}
+                placeholder="https://drive.google.com/file/..."
+                className="w-full pl-9 pr-3 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-300 focus:border-emerald-400 transition-all"
+              />
+            </div>
+            {form.reportUrl && (
+              <a
+                href={form.reportUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-1 mt-1.5 text-[10px] text-emerald-600 hover:underline"
+              >
+                <BadgeCheck className="w-3 h-3" /> Verify link opens correctly
+              </a>
+            )}
+            <p className="text-[10px] text-slate-400 mt-1">
+              💡 Tip: Upload to Google Drive, set sharing to "Anyone with link", then paste here. Setting status to "Report Ready" will notify the user.
+            </p>
+          </div>
+
           {/* Notes for user */}
           <div>
             <label className="block text-xs font-bold text-slate-600 mb-1.5">Note to User (visible on their order)</label>
@@ -227,50 +258,77 @@ function EditOrderModal({
 function AdminOrderRow({ order, onEdit }: { order: LabOrder; onEdit: (o: LabOrder) => void }) {
   const cfg = STATUS_CONFIG[order.status]
   const Icon = cfg.icon
+  const needsReport = order.paymentStatus === 'paid' && order.status !== 'delivered' && order.status !== 'pending_payment'
 
   return (
     <motion.div
       layout
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bg-white rounded-2xl border border-slate-200/60 p-4 flex items-center gap-4 shadow-sm hover:shadow-md transition-shadow"
+      className="bg-white rounded-2xl border border-slate-200/60 p-4 shadow-sm hover:shadow-md transition-shadow overflow-hidden"
     >
-      <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center shrink-0">
-        <FlaskConical className="w-5 h-5 text-blue-600" />
-      </div>
+      {/* Highlight band for orders needing report */}
+      {needsReport && (
+        <div className="flex items-center gap-2 mb-3 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2">
+          <Bell className="w-3.5 h-3.5 text-amber-600 shrink-0" />
+          <p className="text-[11px] font-bold text-amber-700 flex-1">Paid — upload report URL &amp; mark as delivered</p>
+        </div>
+      )}
 
-      <div className="flex-1 min-w-0">
-        <p className="font-bold text-slate-800 text-sm truncate">{order.testName}</p>
-        <div className="flex items-center gap-3 mt-0.5 flex-wrap">
-          <span className="text-[11px] text-slate-400">{new Date(order.orderedAt).toLocaleDateString('en-IN')}</span>
-          {order.labName && <span className="text-[11px] text-blue-600 font-semibold">{order.labName}</span>}
-          {order.txnRef && <code className="text-[10px] font-mono text-slate-400">{order.txnRef}</code>}
+      <div className="flex items-center gap-4">
+        <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center shrink-0">
+          <FlaskConical className="w-5 h-5 text-blue-600" />
+        </div>
+
+        <div className="flex-1 min-w-0">
+          <p className="font-bold text-slate-800 text-sm truncate">{order.testName}</p>
+          <div className="flex items-center gap-3 mt-0.5 flex-wrap">
+            <span className="text-[11px] text-slate-400">{new Date(order.orderedAt).toLocaleDateString('en-IN')}</span>
+            {order.labName && <span className="text-[11px] text-blue-600 font-semibold">{order.labName}</span>}
+            {order.txnRef && <code className="text-[10px] font-mono text-slate-400">{order.txnRef}</code>}
+            {(order as any).patientName && <span className="text-[11px] text-slate-500">👤 {(order as any).patientName}</span>}
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2 shrink-0 flex-wrap justify-end">
+          {/* Payment badge */}
+          <span className={`text-[10px] font-bold px-2 py-1 rounded-full ${order.paymentStatus === 'paid' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`}>
+            {order.paymentStatus === 'paid' ? '✅ Paid' : '⏳ Unpaid'}
+          </span>
+
+          {/* Status badge */}
+          <div className={`flex items-center gap-1 px-2.5 py-1 rounded-full border text-[10px] font-bold ${cfg.bg} ${cfg.color}`}>
+            <Icon className={`w-3 h-3 ${order.status === 'processing' ? 'animate-spin' : ''}`} />
+            {cfg.label}
+          </div>
+
+          {/* Amount */}
+          <span className="text-sm font-black text-slate-700">₹{order.amount}</span>
+
+          {/* Edit */}
+          <button
+            onClick={() => onEdit(order)}
+            className="w-8 h-8 rounded-xl bg-slate-100 hover:bg-blue-100 hover:text-blue-600 flex items-center justify-center transition-colors"
+          >
+            <Edit3 className="w-3.5 h-3.5" />
+          </button>
         </div>
       </div>
 
-      <div className="flex items-center gap-2 shrink-0 flex-wrap justify-end">
-        {/* Payment badge */}
-        <span className={`text-[10px] font-bold px-2 py-1 rounded-full ${order.paymentStatus === 'paid' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`}>
-          {order.paymentStatus === 'paid' ? '✅ Paid' : '⏳ Unpaid'}
-        </span>
-
-        {/* Status badge */}
-        <div className={`flex items-center gap-1 px-2.5 py-1 rounded-full border text-[10px] font-bold ${cfg.bg} ${cfg.color}`}>
-          <Icon className={`w-3 h-3 ${order.status === 'processing' ? 'animate-spin' : ''}`} />
-          {cfg.label}
+      {/* Report URL preview */}
+      {order.reportUrl && (
+        <div className="mt-3 flex items-center gap-2 bg-emerald-50 border border-emerald-100 rounded-xl px-3 py-2">
+          <BadgeCheck className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+          <a
+            href={order.reportUrl}
+            target="_blank"
+            rel="noreferrer"
+            className="text-[11px] text-emerald-700 font-semibold hover:underline truncate flex-1"
+          >
+            {order.reportUrl}
+          </a>
         </div>
-
-        {/* Amount */}
-        <span className="text-sm font-black text-slate-700">₹{order.amount}</span>
-
-        {/* Edit */}
-        <button
-          onClick={() => onEdit(order)}
-          className="w-8 h-8 rounded-xl bg-slate-100 hover:bg-blue-100 hover:text-blue-600 flex items-center justify-center transition-colors"
-        >
-          <Edit3 className="w-3.5 h-3.5" />
-        </button>
-      </div>
+      )}
     </motion.div>
   )
 }
@@ -368,18 +426,60 @@ export default function AdminOrders() {
             </div>
 
             {/* Stats bar */}
-            <div className="grid grid-cols-4 gap-3 mt-5">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-5">
               {[
-                { label: 'Total', value: counts.all, color: 'text-slate-700', bg: 'bg-slate-50 border-slate-200' },
-                { label: 'Unpaid', value: counts.unpaid, color: 'text-amber-700', bg: 'bg-amber-50 border-amber-200' },
-                { label: 'Processing', value: counts.processing + counts.sample_collected, color: 'text-purple-700', bg: 'bg-purple-50 border-purple-200' },
-                { label: 'Delivered', value: counts.delivered, color: 'text-emerald-700', bg: 'bg-emerald-50 border-emerald-200' },
-              ].map(s => (
-                <div key={s.label} className={`${s.bg} border rounded-2xl p-3 text-center`}>
-                  <p className={`text-2xl font-black ${s.color}`}>{s.value}</p>
-                  <p className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider mt-0.5">{s.label}</p>
-                </div>
-              ))}
+                { label: 'Total Orders', value: counts.all, color: 'text-slate-700', bg: 'bg-slate-50 border-slate-200', icon: PackageSearch },
+                { label: 'Unpaid', value: counts.unpaid, color: 'text-amber-700', bg: 'bg-amber-50 border-amber-200', icon: Clock },
+                { label: 'Processing', value: counts.processing + counts.sample_collected, color: 'text-purple-700', bg: 'bg-purple-50 border-purple-200', icon: Loader2 },
+                { label: 'Delivered', value: counts.delivered, color: 'text-emerald-700', bg: 'bg-emerald-50 border-emerald-200', icon: CheckCircle2 },
+              ].map(s => {
+                const Icon = s.icon
+                return (
+                  <div key={s.label} className={`${s.bg} border rounded-2xl p-3 flex items-center gap-3`}>
+                    <Icon className={`w-5 h-5 ${s.color} shrink-0`} />
+                    <div>
+                      <p className={`text-xl font-black ${s.color}`}>{s.value}</p>
+                      <p className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider">{s.label}</p>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+
+            {/* Revenue summary */}
+            <div className="mt-3 grid grid-cols-2 md:grid-cols-3 gap-3">
+              {[
+                {
+                  label: 'Total Revenue',
+                  value: `₹${orders.reduce((s, o) => s + (o.paymentStatus === 'paid' ? o.amount : 0), 0).toLocaleString('en-IN')}`,
+                  sub: `${orders.filter(o => o.paymentStatus === 'paid').length} paid orders`,
+                  color: 'text-emerald-700', bg: 'bg-emerald-50 border-emerald-200', icon: IndianRupee,
+                },
+                {
+                  label: 'Pending Revenue',
+                  value: `₹${orders.reduce((s, o) => s + (o.paymentStatus === 'pending' ? o.amount : 0), 0).toLocaleString('en-IN')}`,
+                  sub: `${orders.filter(o => o.paymentStatus === 'pending').length} unpaid`,
+                  color: 'text-amber-700', bg: 'bg-amber-50 border-amber-200', icon: TrendingUp,
+                },
+                {
+                  label: 'Reports Pending',
+                  value: String(orders.filter(o => o.status !== 'delivered' && o.status !== 'pending_payment').length),
+                  sub: 'Need report upload',
+                  color: 'text-blue-700', bg: 'bg-blue-50 border-blue-200', icon: Bell,
+                },
+              ].map(s => {
+                const Icon = s.icon
+                return (
+                  <div key={s.label} className={`${s.bg} border rounded-2xl p-3`}>
+                    <div className="flex items-center gap-1.5 mb-1">
+                      <Icon className={`w-3.5 h-3.5 ${s.color}`} />
+                      <p className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider">{s.label}</p>
+                    </div>
+                    <p className={`text-xl font-black ${s.color}`}>{s.value}</p>
+                    <p className="text-[10px] text-slate-400 mt-0.5">{s.sub}</p>
+                  </div>
+                )
+              })}
             </div>
 
             {/* Filter tabs */}

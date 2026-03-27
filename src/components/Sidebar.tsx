@@ -21,7 +21,9 @@ import {
   QrCode,
   PackageSearch,
 } from 'lucide-react'
+import { useState, useEffect } from 'react'
 import { logout, type AuthUser } from '../lib/auth'
+import { getUnseenReportCount } from '../pages/Orders'
 
 const navItems = [
   { to: '/', icon: LayoutDashboard, label: 'Dashboard', badge: null, group: 'core' },
@@ -56,6 +58,15 @@ export default function Sidebar({ user, onLogout, show, onClose }: Props) {
   const allItems = user?.role === 'admin'
     ? [...navItems, ...adminOnlyItems]
     : navItems
+
+  const [unseenReports, setUnseenReports] = useState(0)
+
+  useEffect(() => {
+    const refresh = () => setUnseenReports(getUnseenReportCount(user?.id))
+    refresh()
+    const interval = setInterval(refresh, 5000)
+    return () => clearInterval(interval)
+  }, [user?.id])
 
   const handleLogout = async () => {
     await logout()
@@ -176,7 +187,17 @@ export default function Sidebar({ user, onLogout, show, onClose }: Props) {
                               <item.icon className={`w-[15px] h-[15px] relative z-10 ${isActive ? 'text-white' : group === 'premium' ? 'text-violet-500' : 'text-slate-400 group-hover:text-slate-600'}`} />
                             </motion.div>
                             <span className="flex-1 truncate">{item.label}</span>
-                            {item.badge && (
+                            {/* Unseen report notification badge */}
+                            {item.to === '/orders' && unseenReports > 0 && (
+                              <motion.span
+                                initial={{ scale: 0 }}
+                                animate={{ scale: 1 }}
+                                className="w-5 h-5 rounded-full bg-emerald-500 text-white text-[9px] font-black flex items-center justify-center shadow-sm shadow-emerald-400/40"
+                              >
+                                {unseenReports}
+                              </motion.span>
+                            )}
+                            {item.badge && !(item.to === '/orders' && unseenReports > 0) && (
                               <motion.span
                                 initial={{ scale: 0 }}
                                 animate={{ scale: 1 }}

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { NavLink, useLocation } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
@@ -8,6 +8,7 @@ import {
   FlaskConical, Gift, Crown, QrCode, PackageSearch,
 } from 'lucide-react'
 import type { AuthUser } from '../lib/auth'
+import { getUnseenReportCount } from '../pages/Orders'
 
 const NAV_ITEMS = [
   { to: '/',          icon: LayoutDashboard, label: 'Home',     color: 'from-violet-500 to-purple-600',  dot: 'bg-violet-400' },
@@ -41,6 +42,14 @@ export default function MobileNav({ user }: Props) {
   const location = useLocation()
   const [showMore, setShowMore] = useState(false)
   const [tappedIndex, setTappedIndex] = useState<number | null>(null)
+  const [unseenReports, setUnseenReports] = useState(0)
+
+  useEffect(() => {
+    const refresh = () => setUnseenReports(getUnseenReportCount(user?.id))
+    refresh()
+    const interval = setInterval(refresh, 5000)
+    return () => clearInterval(interval)
+  }, [user?.id])
 
   const allMore = user?.role === 'admin'
     ? [...USER_MORE_ITEMS, ...ADMIN_MORE_ITEMS]
@@ -127,6 +136,11 @@ export default function MobileNav({ user }: Props) {
                         <p className={`text-sm font-bold ${isActive ? 'text-slate-900' : 'text-slate-700'}`}>{item.label}</p>
                         <p className="text-[11px] text-slate-400 truncate">{item.desc}</p>
                       </div>
+                      {item.to === '/orders' && unseenReports > 0 && (
+                        <span className="w-5 h-5 rounded-full bg-emerald-500 text-white text-[9px] font-black flex items-center justify-center mr-1">
+                          {unseenReports}
+                        </span>
+                      )}
                       <motion.div animate={isActive ? { x: [0, 3, 0] } : {}} transition={{ repeat: Infinity, duration: 1.5 }}>
                         <ChevronRight className={`w-4 h-4 ${isActive ? 'text-emerald-500' : 'text-slate-300'}`} />
                       </motion.div>

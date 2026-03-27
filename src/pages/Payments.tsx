@@ -49,7 +49,7 @@ const UPI_ID         = import.meta.env.VITE_UPI_ID        || ''
 const MERCHANT_NAME  = import.meta.env.VITE_MERCHANT_NAME || 'MedAI Payments'
 const MERCHANT_EMAIL = import.meta.env.VITE_MERCHANT_EMAIL || ''
 const MERCHANT_PHONE = import.meta.env.VITE_MERCHANT_PHONE || ''
-const ADMIN_WHATSAPP = import.meta.env.VITE_WHATSAPP_NO   || ''
+const ADMIN_WHATSAPP = import.meta.env.VITE_WHATSAPP_NO   || '916303089945'
 
 // ─────────────────────────────────────────────────────────────
 // PAYMENT ITEMS

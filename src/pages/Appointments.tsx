@@ -30,6 +30,12 @@ import { useNavigate } from 'react-router-dom'
 import { getStoredUser } from '../lib/auth'
 import { getOrders, saveOrders } from './Orders'
 
+// ─────────────────────────────────────────────────────────────
+// ADMIN WHATSAPP — receives every new order instantly
+// Set VITE_WHATSAPP_NO in your .env / Render environment variables.
+// ─────────────────────────────────────────────────────────────
+const ADMIN_WA = import.meta.env.VITE_WHATSAPP_NO || '916303089945'
+
 // --- Types ---
 interface TestPackage {
   id: string
@@ -217,6 +223,28 @@ export default function Appointments() {
     }
     const existing = getOrders()
     saveOrders([newOrder, ...existing])
+
+    // ── Auto-notify admin on WhatsApp immediately ──────────────
+    const msg = encodeURIComponent(
+      `🔔 *New Lab Test Order — MedAI*\n\n` +
+      `🧪 *Test:* ${newOrder.testName}\n` +
+      `💰 *Amount:* ₹${newOrder.amount}\n` +
+      `🆔 *Order ID:* ${newOrder.id}\n` +
+      `🔑 *Ref:* ${txnRef}\n\n` +
+      `👤 *Patient:* ${form.name || 'Not provided'}\n` +
+      `📱 *Patient Phone:* ${form.phone || 'Not provided'}\n` +
+      `📧 *Account Email:* ${user?.email || 'N/A'}\n\n` +
+      `🏥 *Lab:* ${selectedLab?.name || 'Not selected'}\n` +
+      `📍 *Lab Address:* ${selectedLab?.address || 'N/A'}\n` +
+      `🚗 *Collection Mode:* ${form.mode === 'home' ? 'Home Collection' : 'Walk-in'}\n` +
+      `📅 *Date:* ${form.date || 'Not set'}\n` +
+      `⏰ *Time Slot:* ${form.timeSlot || 'Not set'}\n\n` +
+      `💳 *Payment Status:* Pending\n` +
+      `🕐 *Ordered At:* ${new Date().toLocaleString('en-IN')}\n\n` +
+      `Please confirm the order and assign a lab partner. 🙏`
+    )
+    window.open(`https://wa.me/${ADMIN_WA}?text=${msg}`, '_blank')
+    // ───────────────────────────────────────────────────────────
 
     setSubmitting(false)
     setSubmitted(true)

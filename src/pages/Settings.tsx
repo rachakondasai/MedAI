@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import {
   User, Bell, Shield, Key, CheckCircle, XCircle, Loader2, LogOut, Server,
   Zap, ExternalLink, Sparkles, Crown, Settings2, Lock,
-  Activity, ChevronRight, Heart, Phone, Mail, BadgeCheck,
+  Activity, ChevronRight, Heart, Phone, Mail, BadgeCheck, Save, Edit3,
 } from 'lucide-react'
 import { validateApiKey, setApiKey, getStoredApiKey, checkBackendHealth, getUserPreferences, saveUserPreferences } from '../lib/api'
 import { getStoredUser } from '../lib/auth'
@@ -55,6 +55,20 @@ export default function Settings() {
   const [backendOnline, setBackendOnline] = useState<boolean | null>(null)
   const [toggles, setToggles] = useState<Record<string, boolean>>(DEFAULT_PREFS)
   const currentUser = getStoredUser()
+
+  // Profile edit state
+  const [editingPhone, setEditingPhone] = useState(false)
+  const [phoneVal, setPhoneVal] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('medai_phone') || '""') } catch { return '' }
+  })
+  const [phoneSaved, setPhoneSaved] = useState(false)
+
+  const savePhone = () => {
+    localStorage.setItem('medai_phone', JSON.stringify(phoneVal))
+    setEditingPhone(false)
+    setPhoneSaved(true)
+    setTimeout(() => setPhoneSaved(false), 2000)
+  }
 
   useEffect(() => {
     checkBackendHealth().then(setBackendOnline)
@@ -174,16 +188,49 @@ export default function Settings() {
 
             {/* Quick info rows */}
             <div className="space-y-2">
-              {[
-                { icon: Mail, label: 'Email', value: currentUser?.email || '—' },
-                { icon: Phone, label: 'Phone', value: 'Not set' },
-              ].map(row => (
-                <div key={row.label} className="flex items-center gap-3 px-1">
-                  <row.icon className="w-3.5 h-3.5 text-slate-400 flex-shrink-0" />
-                  <span className="text-[11px] text-slate-400 w-14">{row.label}</span>
-                  <span className="text-[11px] font-semibold text-slate-700 flex-1 truncate">{row.value}</span>
-                </div>
-              ))}
+              <div className="flex items-center gap-3 px-1">
+                <Mail className="w-3.5 h-3.5 text-slate-400 flex-shrink-0" />
+                <span className="text-[11px] text-slate-400 w-14">Email</span>
+                <span className="text-[11px] font-semibold text-slate-700 flex-1 truncate">{currentUser?.email || '—'}</span>
+              </div>
+              <div className="flex items-center gap-3 px-1">
+                <Phone className="w-3.5 h-3.5 text-slate-400 flex-shrink-0" />
+                <span className="text-[11px] text-slate-400 w-14">Phone</span>
+                <AnimatePresence mode="wait">
+                  {editingPhone ? (
+                    <motion.div key="edit" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex items-center gap-1.5 flex-1">
+                      <input
+                        autoFocus
+                        type="tel"
+                        value={phoneVal}
+                        onChange={e => setPhoneVal(e.target.value.replace(/\D/g, '').slice(0, 10))}
+                        placeholder="10-digit number"
+                        className="flex-1 text-[11px] px-2.5 py-1.5 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                      />
+                      <motion.button whileTap={{ scale: 0.95 }} onClick={savePhone}
+                        className="p-1.5 bg-emerald-100 text-emerald-600 rounded-lg">
+                        <Save className="w-3 h-3" />
+                      </motion.button>
+                    </motion.div>
+                  ) : (
+                    <motion.div key="view" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex items-center gap-2 flex-1">
+                      <span className="text-[11px] font-semibold text-slate-700 flex-1">{phoneVal || 'Not set'}</span>
+                      <motion.button whileTap={{ scale: 0.93 }} onClick={() => setEditingPhone(true)}
+                        className="p-1 rounded-lg text-slate-400 hover:text-blue-500 hover:bg-blue-50 transition-colors">
+                        <Edit3 className="w-3 h-3" />
+                      </motion.button>
+                      <AnimatePresence>
+                        {phoneSaved && (
+                          <motion.span key="saved" initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }}
+                            className="text-[9px] text-emerald-600 font-bold bg-emerald-50 px-1.5 py-0.5 rounded-full">
+                            Saved ✓
+                          </motion.span>
+                        )}
+                      </AnimatePresence>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </div>
             </div>
           </div>
         </motion.div>
@@ -443,20 +490,44 @@ export default function Settings() {
               <p className="text-[10px] text-red-400">Irreversible actions</p>
             </div>
           </div>
-          <div className="p-4 flex items-center justify-between gap-3">
-            <div>
-              <p className="text-sm text-slate-800 font-semibold">Clear API Key</p>
-              <p className="text-[11px] text-slate-400 mt-0.5">Remove saved OpenAI API key from local storage</p>
+          <div className="p-4 space-y-3">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <p className="text-sm text-slate-800 font-semibold">Clear API Key</p>
+                <p className="text-[11px] text-slate-400 mt-0.5">Remove saved OpenAI API key from local storage</p>
+              </div>
+              <motion.button
+                onClick={() => { setApiKey(''); setApiKeyState(''); setKeyStatus('idle') }}
+                whileTap={{ scale: 0.95 }}
+                className="flex-shrink-0 px-4 py-2.5 text-xs font-bold text-red-600 border-2 border-red-200 hover:bg-red-50 hover:border-red-300 rounded-xl transition-all flex items-center gap-1.5"
+              >
+                <LogOut className="w-3.5 h-3.5" /> Clear
+              </motion.button>
             </div>
-            <motion.button
-              onClick={() => { setApiKey(''); setApiKeyState(''); setKeyStatus('idle') }}
-              whileTap={{ scale: 0.95 }}
-              className="flex-shrink-0 px-4 py-2.5 text-xs font-bold text-red-600 border-2 border-red-200 hover:bg-red-50 hover:border-red-300 rounded-xl transition-all flex items-center gap-1.5"
-            >
-              <LogOut className="w-3.5 h-3.5" /> Clear
-            </motion.button>
+            <div className="flex items-center justify-between gap-3 pt-2 border-t border-red-50">
+              <div>
+                <p className="text-sm text-slate-800 font-semibold">Sign Out</p>
+                <p className="text-[11px] text-slate-400 mt-0.5">Log out of your MedAI account</p>
+              </div>
+              <motion.button
+                onClick={() => {
+                  localStorage.removeItem('medai_user')
+                  window.location.href = '/login'
+                }}
+                whileTap={{ scale: 0.95 }}
+                className="flex-shrink-0 px-4 py-2.5 text-xs font-bold text-white bg-gradient-to-r from-red-600 to-rose-600 rounded-xl shadow-md shadow-red-500/20 flex items-center gap-1.5"
+              >
+                <LogOut className="w-3.5 h-3.5" /> Sign Out
+              </motion.button>
+            </div>
           </div>
         </motion.div>
+
+        {/* ── App Info Footer ───────────────────────────── */}
+        <div className="text-center py-4 space-y-1">
+          <p className="text-[10px] text-slate-400 font-medium">MedAI Platform · v2.0 Production</p>
+          <p className="text-[9px] text-slate-300">© 2024 MedAI · All rights reserved</p>
+        </div>
 
       </div>
     </div>

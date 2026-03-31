@@ -14,7 +14,7 @@ import {
   FlaskConical, Calendar, Clock, MapPin, ChevronRight, ChevronLeft,
   Check, Search, Building2, User, Phone, Loader2, ArrowRight,
   Microscope, Heart, Activity, Droplets, Brain, PackageSearch,
-  Navigation, AlertCircle, RefreshCw, Zap,
+  Navigation, AlertCircle, RefreshCw, Zap, PlusCircle, Edit3, X,
 } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { getStoredUser } from '../lib/auth'
@@ -75,45 +75,170 @@ function haversineM(lat1: number, lon1: number, lat2: number, lon2: number): num
 }
 function fmtDist(m: number) { return m < 1000 ? `${Math.round(m)} m` : `${(m/1000).toFixed(1)} km` }
 
-async function fetchNearbyLabs(lat: number, lon: number, radiusM = 6000): Promise<NearbyLab[]> {
-  const query = `
-    [out:json][timeout:25];
-    (
-      node["amenity"="clinic"](around:${radiusM},${lat},${lon});
-      node["amenity"="hospital"](around:${radiusM},${lat},${lon});
-      node["healthcare"="laboratory"](around:${radiusM},${lat},${lon});
-      node["healthcare"="clinic"](around:${radiusM},${lat},${lon});
-      node["name"~"diagnostic|lab|path|health|medic|clinic|hospital",i](around:${radiusM},${lat},${lon});
-      way["amenity"="clinic"](around:${radiusM},${lat},${lon});
-      way["amenity"="hospital"](around:${radiusM},${lat},${lon});
-      way["healthcare"="laboratory"](around:${radiusM},${lat},${lon});
-    );
-    out center tags;
-  `
-  const res = await fetch('https://overpass-api.de/api/interpreter', { method:'POST', body:query })
-  const data = await res.json()
+// Multiple Overpass mirrors — try each in order until one works
+const OVERPASS_MIRRORS = [
+  'https://overpass-api.de/api/interpreter',
+  'https://overpass.kumi.systems/api/interpreter',
+  'https://maps.mail.ru/osm/tools/overpass/api/interpreter',
+]
+
+// Broader query — catch ALL named places near the user.
+// Small-town Indian labs are often only tagged with "name", no amenity/healthcare tag.
+async function fetchNearbyLabs(lat: number, lon: number, radiusM = 8000): Promise<NearbyLab[]> {
+  // We use two separate queries so the interpreter doesn't time out:
+  // Query A: amenity/healthcare tags (high-quality matches)
+  // Query B: name-based regex — catches Thyrocare, SLS, Ebenezer etc.
+  const queryA = `[out:json][timeout:30];(node["amenity"~"clinic|hospital|doctors"](around:${radiusM},${lat},${lon});node["healthcare"~"laboratory|clinic|centre|center|doctor|pharmacy"](around:${radiusM},${lat},${lon});way["amenity"~"clinic|hospital"](around:${radiusM},${lat},${lon});way["healthcare"~"laboratory|clinic"](around:${radiusM},${lat},${lon}););out center tags;`
+  const queryB = `[out:json][timeout:30];(node["name"~"diagnostic|lab|path|health|medic|clinic|hospital|thyro|apollo|lal|SLS|ebenezer|biochemical|medical|centre|center",i](around:${radiusM},${lat},${lon});way["name"~"diagnostic|lab|path|health|medic|clinic|hospital|thyro|apollo|lal",i](around:${radiusM},${lat},${lon}););out center tags;`
+
+  const tryFetch = async (url: string, body: string) => {
+    const ctrl = new AbortController()
+    const timeout = setTimeout(() => ctrl.abort(), 18000)
+    try {
+      const res = await fetch(url, { method: 'POST', body, signal: ctrl.signal })
+      clearTimeout(timeout)
+      if (!res.ok) throw new Error(`HTTP ${res.status}`)
+      return await res.json()
+    } catch (e) {
+      clearTimeout(timeout)
+      throw e
+    }
+  }
+
+  // Try each mirror for both queries, return first success
+  let elementsA: any[] = []
+  let elementsB: any[] = []
+
+  for (const mirror of OVERPASS_MIRRORS) {
+    try {
+      const [dA, dB] = await Promise.all([
+        tryFetch(mirror, queryA),
+        tryFetch(mirror, queryB),
+      ])
+      elementsA = dA.elements ?? []
+      elementsB = dB.elements ?? []
+      break // success — stop trying mirrors
+    } catch {
+      // this mirror failed — try next
+    }
+  }
+
+  // Merge and deduplicate by name
   const seen = new Set<string>()
   const labs: NearbyLab[] = []
-  for (const el of data.elements ?? []) {
-    const name: string = el.tags?.name || el.tags?.['name:en'] || ''
-    if (!name || name.trim().length < 3) continue
+
+  for (const el of [...elementsA, ...elementsB]) {
+    const name: string = el.tags?.name || el.tags?.['name:en'] || el.tags?.['name:te'] || ''
+    if (!name || name.trim().length < 2) continue
     const elLat = el.lat ?? el.center?.lat
     const elLon = el.lon ?? el.center?.lon
     if (!elLat || !elLon) continue
-    const key = name.toLowerCase().trim()
+    const key = name.toLowerCase().replace(/\s+/g, '')
     if (seen.has(key)) continue
     seen.add(key)
     const distM = haversineM(lat, lon, elLat, elLon)
-    const addr = [el.tags?.['addr:housenumber'], el.tags?.['addr:street'], el.tags?.['addr:suburb']||el.tags?.['addr:city']]
-      .filter(Boolean).join(', ') || el.tags?.['addr:full'] || ''
-    labs.push({ id:String(el.id), name:name.trim(), address:addr, distance:fmtDist(distM), distanceM:distM, lat:elLat, lon:elLon, phone:el.tags?.phone||el.tags?.['contact:phone']||'', homeCollection:false })
+    const addr = [
+      el.tags?.['addr:housenumber'],
+      el.tags?.['addr:street'],
+      el.tags?.['addr:suburb'] || el.tags?.['addr:city'] || el.tags?.['addr:district'],
+    ].filter(Boolean).join(', ') || el.tags?.['addr:full'] || ''
+    labs.push({
+      id: String(el.id),
+      name: name.trim(),
+      address: addr,
+      distance: fmtDist(distM),
+      distanceM: distM,
+      lat: elLat, lon: elLon,
+      phone: el.tags?.phone || el.tags?.['contact:phone'] || el.tags?.['contact:mobile'] || '',
+      homeCollection: false,
+    })
   }
-  return labs.sort((a,b)=>a.distanceM-b.distanceM).slice(0,15)
+
+  return labs.sort((a, b) => a.distanceM - b.distanceM).slice(0, 20)
 }
 
 // ─────────────────────────────────────────────────────────────
 // COMPONENT
 // ─────────────────────────────────────────────────────────────
+
+// ── Manual Lab Entry Form ─────────────────────────────────────
+interface ManualLabFormState { name: string; address: string; phone: string }
+
+function ManualLabEntry({ onAdd, onCancel }: {
+  onAdd: (lab: NearbyLab) => void
+  onCancel: () => void
+}) {
+  const [vals, setVals] = useState<ManualLabFormState>({ name: '', address: '', phone: '' })
+  const [err, setErr] = useState('')
+
+  const submit = () => {
+    if (!vals.name.trim()) { setErr('Lab name is required.'); return }
+    onAdd({
+      id: `manual-${Date.now()}`,
+      name: vals.name.trim(),
+      address: vals.address.trim(),
+      distance: 'Manual',
+      distanceM: 0,
+      lat: 0, lon: 0,
+      phone: vals.phone.trim(),
+      homeCollection: false,
+    })
+  }
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: 10 }}
+      className="bg-blue-50 border border-blue-200 rounded-2xl p-4 space-y-3 mt-3"
+    >
+      <div className="flex items-center justify-between">
+        <p className="text-xs font-bold text-blue-800 flex items-center gap-1.5">
+          <Edit3 className="w-3.5 h-3.5" /> Enter Lab Manually
+        </p>
+        <button onClick={onCancel} className="text-blue-400 hover:text-blue-600">
+          <X className="w-4 h-4" />
+        </button>
+      </div>
+      {err && <p className="text-[11px] text-red-600 font-semibold">{err}</p>}
+      <input
+        value={vals.name}
+        onChange={e => { setVals(v => ({ ...v, name: e.target.value })); setErr('') }}
+        placeholder="Lab / clinic name *"
+        className="w-full px-3.5 py-2.5 rounded-xl border border-blue-200 text-xs bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400"
+      />
+      <input
+        value={vals.address}
+        onChange={e => setVals(v => ({ ...v, address: e.target.value }))}
+        placeholder="Address (optional)"
+        className="w-full px-3.5 py-2.5 rounded-xl border border-blue-200 text-xs bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400"
+      />
+      <input
+        value={vals.phone}
+        onChange={e => setVals(v => ({ ...v, phone: e.target.value.replace(/\D/g, '').slice(0, 10) }))}
+        placeholder="Lab phone (optional)"
+        type="tel"
+        className="w-full px-3.5 py-2.5 rounded-xl border border-blue-200 text-xs bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400"
+      />
+      <div className="flex gap-2">
+        <motion.button
+          whileTap={{ scale: 0.97 }}
+          onClick={submit}
+          className="flex-1 py-2.5 bg-blue-600 text-white text-xs font-bold rounded-xl flex items-center justify-center gap-1.5"
+        >
+          <Check className="w-3.5 h-3.5" /> Add Lab
+        </motion.button>
+        <button
+          onClick={onCancel}
+          className="px-4 py-2.5 border border-blue-200 text-xs text-blue-600 font-bold rounded-xl"
+        >
+          Cancel
+        </button>
+      </div>
+    </motion.div>
+  )
+}
+
 export default function Appointments() {
   const user = getStoredUser()
   const navigate = useNavigate()
@@ -135,6 +260,20 @@ export default function Appointments() {
   const [nearbyLabs, setNearbyLabs] = useState<NearbyLab[]>([])
   const [labError, setLabError] = useState('')
   const [labSearch, setLabSearch] = useState('')
+
+  // Manual lab entry
+  const [showManualEntry, setShowManualEntry] = useState(false)
+  const [manualLabs, setManualLabs] = useState<NearbyLab[]>([])
+
+  // Combined labs: OSM results + manually added
+  const allLabs = [...nearbyLabs, ...manualLabs]
+
+  const handleAddManualLab = (lab: NearbyLab) => {
+    setManualLabs(prev => [lab, ...prev])
+    setForm(f => ({ ...f, labId: lab.id }))
+    setShowManualEntry(false)
+    setLabError('')
+  }
 
   const requestLocation = useCallback(() => {
     setLocState('requesting')
@@ -185,11 +324,11 @@ export default function Appointments() {
     t.name.toLowerCase().includes(search.toLowerCase()) ||
     t.category.toLowerCase().includes(search.toLowerCase()))
 
-  const filteredLabs = nearbyLabs.filter(l =>
+  const filteredLabs = allLabs.filter(l =>
     l.name.toLowerCase().includes(labSearch.toLowerCase()) ||
     l.address.toLowerCase().includes(labSearch.toLowerCase()))
 
-  const selectedLab = nearbyLabs.find(l => l.id === form.labId)
+  const selectedLab = allLabs.find(l => l.id === form.labId)
 
   const tomorrowStr = () => { const d=new Date(); d.setDate(d.getDate()+1); return d.toISOString().split('T')[0] }
   const maxDateStr  = () => { const d=new Date(); d.setDate(d.getDate()+30); return d.toISOString().split('T')[0] }
@@ -529,12 +668,49 @@ export default function Appointments() {
                 )}
 
                 {locState==='error' && (
-                  <div className="rounded-2xl border border-red-100 bg-red-50 p-4 text-center space-y-3">
-                    <AlertCircle className="w-6 h-6 text-red-400 mx-auto"/>
-                    <p className="text-xs font-semibold text-red-700">{locError}</p>
-                    <button onClick={requestLocation} className="px-4 py-2 bg-red-600 text-white text-xs font-bold rounded-xl inline-flex items-center gap-1.5">
-                      <RefreshCw className="w-3.5 h-3.5"/> Try Again
-                    </button>
+                  <div className="space-y-3">
+                    <div className="rounded-2xl border border-red-100 bg-red-50 p-4 text-center space-y-3">
+                      <AlertCircle className="w-6 h-6 text-red-400 mx-auto"/>
+                      <p className="text-xs font-semibold text-red-700">{locError}</p>
+                      <button onClick={requestLocation} className="px-4 py-2 bg-red-600 text-white text-xs font-bold rounded-xl inline-flex items-center gap-1.5">
+                        <RefreshCw className="w-3.5 h-3.5"/> Try Again
+                      </button>
+                    </div>
+                    {/* Fallback: allow manual lab entry even without GPS */}
+                    <div className="rounded-2xl border border-blue-100 bg-blue-50 p-4 space-y-2">
+                      <p className="text-xs font-bold text-blue-800">No GPS? Add your lab manually</p>
+                      <p className="text-[11px] text-blue-600">You can still book by entering your preferred lab's details below.</p>
+                      {!showManualEntry ? (
+                        <motion.button
+                          whileTap={{ scale: 0.97 }}
+                          onClick={() => setShowManualEntry(true)}
+                          className="w-full py-2.5 bg-blue-600 text-white text-xs font-bold rounded-xl flex items-center justify-center gap-1.5"
+                        >
+                          <PlusCircle className="w-3.5 h-3.5"/> Add Lab Manually
+                        </motion.button>
+                      ) : (
+                        <ManualLabEntry onAdd={handleAddManualLab} onCancel={() => setShowManualEntry(false)} />
+                      )}
+                    </div>
+                    {/* Show any manually added labs */}
+                    {manualLabs.length > 0 && (
+                      <div className="space-y-2">
+                        {manualLabs.map(lab => (
+                          <motion.button key={lab.id} whileTap={{scale:0.98}}
+                            onClick={()=>setForm(f=>({...f,labId:lab.id}))}
+                            className={`w-full text-left p-3.5 rounded-2xl border transition-all ${form.labId===lab.id?'border-teal-400 bg-teal-50 shadow-md':'border-slate-100 bg-white'}`}>
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-1.5">
+                                <p className="text-sm font-bold text-slate-900">{lab.name}</p>
+                                <span className="text-[9px] font-black bg-blue-100 text-blue-600 px-1.5 py-0.5 rounded-full">Manual</span>
+                              </div>
+                              {form.labId===lab.id && <Check className="w-4 h-4 text-teal-500"/>}
+                            </div>
+                            {lab.address && <p className="text-[11px] text-slate-400 mt-0.5">{lab.address}</p>}
+                          </motion.button>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 )}
 
@@ -555,23 +731,49 @@ export default function Appointments() {
 
                 {locState==='ok' && !labsLoading && (
                   <>
-                    {nearbyLabs.length > 3 && (
+                    {allLabs.length > 3 && (
                       <div className="relative mb-3">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-slate-400"/>
                         <input value={labSearch} onChange={e=>setLabSearch(e.target.value)} placeholder="Filter labs…"
                           className="w-full pl-9 pr-3 py-2.5 rounded-xl border border-slate-200 text-xs bg-white focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-400"/>
                       </div>
                     )}
-                    {labError ? (
-                      <div className="text-center p-4 text-xs text-slate-500 bg-slate-50 rounded-2xl border border-slate-100">{labError}</div>
+
+                    {/* ── No-results / error state with manual entry CTA ── */}
+                    {labError && allLabs.length === 0 ? (
+                      <div className="text-center p-5 bg-amber-50 border border-amber-100 rounded-2xl space-y-3">
+                        <AlertCircle className="w-6 h-6 text-amber-400 mx-auto"/>
+                        <p className="text-xs font-semibold text-amber-800">{labError}</p>
+                        <p className="text-[11px] text-amber-600 leading-relaxed">
+                          Your local lab may not be on OpenStreetMap yet.<br/>
+                          You can add it manually below and the admin will contact them.
+                        </p>
+                        {!showManualEntry && (
+                          <motion.button
+                            whileTap={{ scale: 0.97 }}
+                            onClick={() => setShowManualEntry(true)}
+                            className="w-full py-2.5 bg-amber-600 text-white text-xs font-bold rounded-xl flex items-center justify-center gap-1.5"
+                          >
+                            <PlusCircle className="w-3.5 h-3.5"/> Add Lab Manually
+                          </motion.button>
+                        )}
+                      </div>
+                    ) : filteredLabs.length === 0 && allLabs.length > 0 ? (
+                      <div className="text-center p-4 text-xs text-slate-500 bg-slate-50 rounded-2xl border border-slate-100">No labs match your search.</div>
                     ) : (
                       <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
+                        {/* Manual labs shown first with a badge */}
                         {filteredLabs.map(lab => (
                           <motion.button key={lab.id} initial={{opacity:0,y:6}} animate={{opacity:1,y:0}} whileTap={{scale:0.98}}
                             onClick={()=>setForm(f=>({...f,labId:lab.id}))}
                             className={`w-full text-left p-3.5 rounded-2xl border transition-all ${form.labId===lab.id?'border-teal-400 bg-teal-50 shadow-md shadow-teal-100':'border-slate-100 bg-white'}`}>
                             <div className="flex items-start justify-between gap-2 mb-1">
-                              <p className="text-sm font-bold text-slate-900 line-clamp-1">{lab.name}</p>
+                              <div className="flex items-center gap-1.5 min-w-0">
+                                <p className="text-sm font-bold text-slate-900 line-clamp-1">{lab.name}</p>
+                                {lab.id.startsWith('manual-') && (
+                                  <span className="flex-shrink-0 text-[9px] font-black bg-blue-100 text-blue-600 px-1.5 py-0.5 rounded-full">Manual</span>
+                                )}
+                              </div>
                               {form.labId===lab.id && <Check className="w-4 h-4 text-teal-500 shrink-0"/>}
                             </div>
                             {lab.address && (
@@ -584,15 +786,38 @@ export default function Appointments() {
                                 <Navigation className="w-3 h-3"/>{lab.distance}
                               </span>
                               {lab.phone && <span className="text-slate-400 flex items-center gap-1"><Phone className="w-3 h-3"/>{lab.phone}</span>}
-                              <a href={`https://maps.google.com/?q=${lab.lat},${lab.lon}`} target="_blank" rel="noreferrer"
-                                onClick={e=>e.stopPropagation()} className="text-blue-500 text-[10px] ml-auto">
-                                Map ↗
-                              </a>
+                              {lab.lat !== 0 && lab.lon !== 0 && (
+                                <a href={`https://maps.google.com/?q=${lab.lat},${lab.lon}`} target="_blank" rel="noreferrer"
+                                  onClick={e=>e.stopPropagation()} className="text-blue-500 text-[10px] ml-auto">
+                                  Map ↗
+                                </a>
+                              )}
                             </div>
                           </motion.button>
                         ))}
                       </div>
                     )}
+
+                    {/* Always-visible "Add Lab Manually" option (when labs exist too) */}
+                    <AnimatePresence>
+                      {showManualEntry ? (
+                        <ManualLabEntry
+                          onAdd={handleAddManualLab}
+                          onCancel={() => setShowManualEntry(false)}
+                        />
+                      ) : (
+                        <motion.button
+                          key="add-manual-btn"
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          whileTap={{ scale: 0.97 }}
+                          onClick={() => setShowManualEntry(true)}
+                          className="w-full mt-2 py-2.5 border border-dashed border-slate-300 text-xs text-slate-500 font-semibold rounded-2xl flex items-center justify-center gap-1.5 hover:border-teal-400 hover:text-teal-600 transition-colors"
+                        >
+                          <PlusCircle className="w-3.5 h-3.5"/> My lab isn't listed — add manually
+                        </motion.button>
+                      )}
+                    </AnimatePresence>
                   </>
                 )}
               </div>
@@ -662,7 +887,9 @@ export default function Appointments() {
                 Continue to Review <ArrowRight className="w-4 h-4"/>
               </motion.button>
               {(!form.labId||!form.date||!form.timeSlot||!form.name||!form.phone) && (
-                <p className="text-[11px] text-slate-400 text-center -mt-2">Fill all fields to continue.</p>
+                <p className="text-[11px] text-slate-400 text-center -mt-2">
+                  {!form.labId ? 'Select or add a lab to continue.' : 'Fill all fields to continue.'}
+                </p>
               )}
             </div>
           </motion.div>

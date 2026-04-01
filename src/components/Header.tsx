@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Bell, Search, User, MapPinned, Settings, X, Sparkles, ArrowRight, Bot, MapPin, ClipboardList, Pill, FlaskConical, Heart } from 'lucide-react'
+import { Bell, Search, User, MapPinned, Settings, X, Sparkles, ArrowRight, Bot, MapPin, ClipboardList, Pill, Heart, FlaskConical } from 'lucide-react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import type { AuthUser } from '../lib/auth'
 import { getUnseenReportCount } from '../pages/Orders'
@@ -84,15 +84,15 @@ export default function Header({ user, userLocation }: Props) {
         <motion.div key={location.pathname}
           initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 8 }}
           transition={{ duration: 0.18, ease: 'easeOut' }}
-          className="flex items-center gap-2.5"
+          className="flex items-center gap-2.5 min-w-0"
         >
           {/* Logo mark — visible on mobile */}
           <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-lg shadow-emerald-500/25 md:hidden flex-shrink-0">
             <Heart className="w-4 h-4 text-white" />
           </div>
-          <div>
+          <div className="min-w-0">
             <div className="flex items-center gap-2">
-              <h1 className="text-sm md:text-base font-extrabold text-slate-900 tracking-tight">{pageInfo.title}</h1>
+              <h1 className="text-sm md:text-base font-extrabold text-slate-900 tracking-tight truncate">{pageInfo.title}</h1>
               {location.pathname === '/' && (
                 <span className="hidden md:flex items-center gap-1 text-[9px] font-bold bg-emerald-50 text-emerald-600 px-2 py-0.5 rounded-full ring-1 ring-emerald-200/60">
                   <motion.span className="w-1.5 h-1.5 rounded-full bg-emerald-400"
@@ -101,10 +101,11 @@ export default function Header({ user, userLocation }: Props) {
                 </span>
               )}
             </div>
-            <p className="hidden md:flex items-center gap-1.5 text-[11px] text-slate-400 mt-0.5">
+            {/* Subtitle: visible on all screen sizes */}
+            <p className="flex items-center gap-1.5 text-[10px] md:text-[11px] text-slate-400 mt-0.5 truncate">
               {location.pathname === '/' ? `${greeting}, ${user?.name?.split(' ')[0] || 'Patient'}` : pageInfo.subtitle}
-              {userLocation && (
-                <span className="inline-flex items-center gap-1 text-blue-600 font-semibold bg-blue-50 px-2 py-0.5 rounded-full text-[10px]">
+              {userLocation && location.pathname === '/' && (
+                <span className="hidden sm:inline-flex items-center gap-1 text-blue-600 font-semibold bg-blue-50 px-2 py-0.5 rounded-full text-[10px] flex-shrink-0">
                   <MapPinned className="w-2.5 h-2.5" /> {userLocation}
                 </span>
               )}
@@ -141,16 +142,6 @@ export default function Header({ user, userLocation }: Props) {
           </div>
         </form>
 
-        {/* Mobile: Book Test shortcut */}
-        <motion.button
-          whileTap={{ scale: 0.92 }}
-          onClick={() => navigate('/appointments')}
-          className="md:hidden flex items-center gap-1.5 px-3 py-2 bg-gradient-to-r from-teal-500 to-cyan-600 text-white text-xs font-bold rounded-xl shadow-md shadow-teal-500/30"
-        >
-          <FlaskConical className="w-3.5 h-3.5" />
-          Book Test
-        </motion.button>
-
         {/* Notification Bell */}
         <div className="relative" ref={notifRef}>
           <motion.button
@@ -177,7 +168,7 @@ export default function Header({ user, userLocation }: Props) {
               <motion.div
                 initial={{ opacity: 0, y: 8, scale: 0.96 }} animate={{ opacity: 1, y: 0, scale: 1 }}
                 exit={{ opacity: 0, y: 8, scale: 0.96 }} transition={{ duration: 0.15 }}
-                className="absolute right-0 top-12 w-80 bg-white/95 backdrop-blur-xl border border-slate-200 rounded-2xl shadow-xl z-50 overflow-hidden"
+                className="absolute right-0 top-12 w-[calc(100vw-32px)] max-w-xs sm:w-80 bg-white/95 backdrop-blur-xl border border-slate-200 rounded-2xl shadow-xl z-50 overflow-hidden"
               >
                 <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100">
                   <div className="flex items-center gap-2">
@@ -222,7 +213,7 @@ export default function Header({ user, userLocation }: Props) {
               <motion.div
                 initial={{ opacity: 0, y: 8, scale: 0.96 }} animate={{ opacity: 1, y: 0, scale: 1 }}
                 exit={{ opacity: 0, y: 8, scale: 0.96 }} transition={{ duration: 0.15 }}
-                className="absolute right-0 top-12 w-64 bg-white/95 backdrop-blur-xl border border-slate-200 rounded-2xl shadow-xl z-50 overflow-hidden"
+                className="absolute right-0 top-12 w-[calc(100vw-32px)] max-w-[256px] bg-white/95 backdrop-blur-xl border border-slate-200 rounded-2xl shadow-xl z-50 overflow-hidden"
               >
                 <div className="px-4 py-3 border-b border-slate-100 bg-gradient-to-r from-slate-50 to-emerald-50/30">
                   <p className="text-sm font-bold text-slate-900 truncate">{user?.name || 'User'}</p>

@@ -69,7 +69,7 @@ export default function App() {
 
         {/* Main scrollable content — bottom padding clears the mobile nav + safe area */}
         <main
-          className="flex-1 overflow-y-auto overscroll-contain md:pb-0"
+          className="flex-1 overflow-y-auto overscroll-contain md:pb-0 bottom-sheet"
           style={{ paddingBottom: 'calc(72px + env(safe-area-inset-bottom, 0px))' }}
         >
           <AnimatePresence mode="wait" initial={false}>

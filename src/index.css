@@ -588,16 +588,24 @@ html, body {
 /* Safe line-height for dense text */
 .leading-dense { line-height: 1.3; }
 
-/* Better tap target sizes for mobile */
+/* Better tap target sizes for mobile — only for elements that are direct tap targets */
 @media (pointer: coarse) {
-  button, a, [role="button"] {
+  /* Ensure primary interactive elements are always thumb-friendly */
+  input[type="text"],
+  input[type="tel"],
+  input[type="email"],
+  input[type="password"],
+  input[type="date"],
+  input[type="search"],
+  select,
+  textarea {
     min-height: 44px;
   }
-  /* Don't override items with their own explicit sizing */
-  .tab-icon, nav a, nav button,
-  [data-no-min-height] {
-    min-height: unset !important;
+  /* Specific buttons that should be larger */
+  .btn-primary, .btn-secondary {
+    min-height: 48px;
   }
+  /* Do NOT apply blanket min-height to all buttons — it breaks icon buttons */
 }
 
 /* ══════════════════════════════════════════════════════ */
@@ -781,4 +789,97 @@ input:-webkit-autofill:focus {
     max-width: 500px;
     margin: 0 auto;
   }
+}
+
+/* ══════════════════════════════════════════════════════ */
+/*  MOBILE TOUCH — ACTIVE STATES & SCROLL PERF           */
+/* ══════════════════════════════════════════════════════ */
+
+/* Accelerate all scrollable containers on iOS */
+.overflow-y-auto,
+.overflow-x-auto,
+.overflow-scroll {
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+}
+
+/* Prevent iOS long-press from triggering selection on buttons/cards */
+button, [role="button"] {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* Native-feel active press on interactive cards on touch devices */
+@media (pointer: coarse) {
+  .card-tap:active {
+    transform: scale(0.985);
+    opacity: 0.92;
+    transition: transform 0.08s ease, opacity 0.08s ease;
+  }
+}
+
+/* ══════════════════════════════════════════════════════ */
+/*  MOBILE — BOTTOM SHEET SAFE SCROLLING                 */
+/* ══════════════════════════════════════════════════════ */
+
+/* Ensure the More drawer doesn't get clipped */
+.bottom-sheet {
+  overscroll-behavior-y: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* ══════════════════════════════════════════════════════ */
+/*  MOBILE — INPUT ZOOM PREVENTION (iOS)                 */
+/* ══════════════════════════════════════════════════════ */
+
+/* iOS zooms in when font-size < 16px in inputs — prevent that */
+@media (max-width: 768px) {
+  input[type="text"],
+  input[type="tel"],
+  input[type="email"],
+  input[type="password"],
+  input[type="date"],
+  input[type="search"],
+  input[type="number"],
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+}
+
+/* ══════════════════════════════════════════════════════ */
+/*  MOBILE — FULL-BLEED DROPDOWNS                        */
+/* ══════════════════════════════════════════════════════ */
+
+/* Ensure dropdowns & modals never clip beyond screen edges */
+@media (max-width: 640px) {
+  .dropdown-mobile {
+    left: 0 !important;
+    right: 0 !important;
+    margin-left: 12px;
+    margin-right: 12px;
+    width: auto !important;
+  }
+}
+
+/* ══════════════════════════════════════════════════════ */
+/*  MOBILE — HORIZONTAL SCROLL SNAP                      */
+/* ══════════════════════════════════════════════════════ */
+
+.snap-scroll-x {
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+}
+.snap-scroll-x > * {
+  scroll-snap-align: start;
+}
+
+/* ══════════════════════════════════════════════════════ */
+/*  MOBILE — MOMENTUM SCROLLING FOR MAIN CONTENT         */
+/* ══════════════════════════════════════════════════════ */
+
+main {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
 }

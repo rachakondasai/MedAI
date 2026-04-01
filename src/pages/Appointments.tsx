@@ -646,23 +646,60 @@ export default function Appointments() {
                 </div>
 
                 {(locState==='idle'||locState==='requesting') && (
-                  <div className="rounded-2xl border border-teal-100 bg-teal-50 p-6 flex flex-col items-center gap-3 text-center">
-                    {locState==='requesting' ? (
-                      <>
-                        <Loader2 className="w-7 h-7 text-teal-500 animate-spin"/>
-                        <p className="text-sm font-bold text-teal-700">Detecting your location…</p>
-                        <p className="text-xs text-teal-600/70">Allow location access when prompted.</p>
-                      </>
-                    ) : (
-                      <>
-                        <div className="w-12 h-12 rounded-2xl bg-teal-100 flex items-center justify-center">
-                          <Navigation className="w-6 h-6 text-teal-500"/>
-                        </div>
-                        <p className="text-sm font-bold text-slate-700">Find labs near you</p>
-                        <button onClick={requestLocation} className="px-5 py-2.5 bg-teal-600 text-white text-xs font-bold rounded-xl shadow-md flex items-center gap-2">
-                          <Navigation className="w-3.5 h-3.5"/> Use My Location
-                        </button>
-                      </>
+                  <div className="space-y-3">
+                    <div className="rounded-2xl border border-teal-100 bg-teal-50 p-5 flex flex-col items-center gap-3 text-center">
+                      {locState==='requesting' ? (
+                        <>
+                          <Loader2 className="w-7 h-7 text-teal-500 animate-spin"/>
+                          <p className="text-sm font-bold text-teal-700">Detecting your location…</p>
+                          <p className="text-xs text-teal-600/70">Allow location access when prompted.</p>
+                        </>
+                      ) : (
+                        <>
+                          <div className="w-12 h-12 rounded-2xl bg-teal-100 flex items-center justify-center">
+                            <Navigation className="w-6 h-6 text-teal-500"/>
+                          </div>
+                          <p className="text-sm font-bold text-slate-700">Find labs near you</p>
+                          <p className="text-xs text-slate-400">We'll search OpenStreetMap for labs in your area.</p>
+                          <button onClick={requestLocation} className="px-5 py-2.5 bg-teal-600 text-white text-xs font-bold rounded-xl shadow-md flex items-center gap-2">
+                            <Navigation className="w-3.5 h-3.5"/> Use My Location
+                          </button>
+                        </>
+                      )}
+                    </div>
+                    {/* Always allow manual entry as fallback */}
+                    {locState==='idle' && (
+                      <div>
+                        {!showManualEntry ? (
+                          <motion.button
+                            whileTap={{ scale: 0.97 }}
+                            onClick={() => setShowManualEntry(true)}
+                            className="w-full py-2.5 border border-dashed border-slate-300 text-xs text-slate-500 font-semibold rounded-2xl flex items-center justify-center gap-1.5 hover:border-teal-400 hover:text-teal-600 transition-colors"
+                          >
+                            <PlusCircle className="w-3.5 h-3.5"/> Or enter lab name manually
+                          </motion.button>
+                        ) : (
+                          <ManualLabEntry onAdd={handleAddManualLab} onCancel={() => setShowManualEntry(false)} />
+                        )}
+                        {manualLabs.length > 0 && (
+                          <div className="space-y-2 mt-2">
+                            {manualLabs.map(lab => (
+                              <motion.button key={lab.id} whileTap={{scale:0.98}}
+                                onClick={()=>setForm(f=>({...f,labId:lab.id}))}
+                                className={`w-full text-left p-3.5 rounded-2xl border transition-all ${form.labId===lab.id?'border-teal-400 bg-teal-50 shadow-md':'border-slate-100 bg-white'}`}>
+                                <div className="flex items-center justify-between">
+                                  <div className="flex items-center gap-1.5">
+                                    <p className="text-sm font-bold text-slate-900">{lab.name}</p>
+                                    <span className="text-[9px] font-black bg-blue-100 text-blue-600 px-1.5 py-0.5 rounded-full">Manual</span>
+                                  </div>
+                                  {form.labId===lab.id && <Check className="w-4 h-4 text-teal-500"/>}
+                                </div>
+                                {lab.address && <p className="text-[11px] text-slate-400 mt-0.5">{lab.address}</p>}
+                              </motion.button>
+                            ))}
+                          </div>
+                        )}
+                      </div>
                     )}
                   </div>
                 )}

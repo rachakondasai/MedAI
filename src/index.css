@@ -17,16 +17,23 @@ html {
   padding-top: env(safe-area-inset-top);
   padding-left: env(safe-area-inset-left);
   padding-right: env(safe-area-inset-right);
-  /* Do NOT add padding-bottom here — handled by pb-[env(...)] on main */
+  /* Do NOT add padding-bottom here — handled by pb style on main */
   height: 100%;
+  /* Prevent iOS elastic bounce on the <html> root */
+  overflow: hidden;
 }
 
 body {
   height: 100%;
+  /* Prevent iOS elastic scroll on body */
+  overflow: hidden;
+  position: fixed;
+  width: 100%;
 }
 
 #root {
   height: 100%;
+  overflow: hidden;
 }
 
 body {
@@ -38,9 +45,9 @@ body {
   /* Prevent text selection on long-press for native feel */
   -webkit-user-select: none;
   user-select: none;
-  /* Prevent callout on iOS */
+  /* Prevent callout on iOS (long-press context menu) */
   -webkit-touch-callout: none;
-  /* Prevent tap highlight */
+  /* Prevent tap highlight flash on iOS */
   -webkit-tap-highlight-color: transparent;
 }
 
@@ -48,6 +55,8 @@ body {
 input, textarea, [contenteditable="true"], .selectable {
   -webkit-user-select: text;
   user-select: text;
+  /* Prevent callout on inputs too (removes "copy/paste" popup on first tap) */
+  -webkit-touch-callout: default;
 }
 
 /* ══════════════════════════════════════════════════════ */
@@ -628,7 +637,7 @@ html, body {
     position: fixed;
     top: 0; left: 0; right: 0;
     height: env(safe-area-inset-top);
-    background: rgba(255, 255, 255, 0.95);
+    background: rgba(255, 255, 255, 0.98);
     z-index: 9999;
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
@@ -783,6 +792,8 @@ input:-webkit-autofill:focus {
   body {
     background: white !important;
     color: black !important;
+    position: static !important;
+    overflow: visible !important;
   }
   .print-invoice {
     padding: 24px;
@@ -795,12 +806,13 @@ input:-webkit-autofill:focus {
 /*  MOBILE TOUCH — ACTIVE STATES & SCROLL PERF           */
 /* ══════════════════════════════════════════════════════ */
 
-/* Accelerate all scrollable containers on iOS */
+/* iOS momentum scrolling for all scrollable containers */
 .overflow-y-auto,
 .overflow-x-auto,
-.overflow-scroll {
+.overflow-scroll,
+.overflow-y-scroll,
+.overflow-x-scroll {
   -webkit-overflow-scrolling: touch;
-  scroll-behavior: smooth;
 }
 
 /* Prevent iOS long-press from triggering selection on buttons/cards */
@@ -817,6 +829,18 @@ button, [role="button"] {
     opacity: 0.92;
     transition: transform 0.08s ease, opacity 0.08s ease;
   }
+}
+
+/* ══════════════════════════════════════════════════════ */
+/*  iOS — SCROLLABLE MAIN CONTAINER (the real fix)       */
+/* ══════════════════════════════════════════════════════ */
+
+/* The main scrollable area needs -webkit-overflow-scrolling
+   to get native iOS momentum scrolling. We also isolate
+   the overscroll so the page doesn't bounce elastically. */
+main, .bottom-sheet {
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
 }
 
 /* ══════════════════════════════════════════════════════ */
@@ -845,7 +869,16 @@ button, [role="button"] {
   select,
   textarea {
     font-size: 16px !important;
+    /* Prevent iOS from changing the color of the placeholder on focus */
+    -webkit-appearance: none;
+    appearance: none;
+    border-radius: inherit;
   }
+}
+
+/* iOS date input: style it to look consistent */
+input[type="date"]::-webkit-date-and-time-value {
+  text-align: left;
 }
 
 /* ══════════════════════════════════════════════════════ */
@@ -876,10 +909,47 @@ button, [role="button"] {
 }
 
 /* ══════════════════════════════════════════════════════ */
-/*  MOBILE — MOMENTUM SCROLLING FOR MAIN CONTENT         */
+/*  iOS — KEYBOARD PUSH-UP FIX                           */
 /* ══════════════════════════════════════════════════════ */
 
-main {
-  -webkit-overflow-scrolling: touch;
-  overscroll-behavior-y: contain;
+/* When the keyboard opens on iOS, `position: fixed` elements
+   can jump up. We use dvh units which respond to visual viewport. */
+.fixed-bottom-ios {
+  bottom: max(env(safe-area-inset-bottom, 0px), 8px);
+}
+
+/* ══════════════════════════════════════════════════════ */
+/*  iOS — BACKDROP FILTER (explicit -webkit- prefix)     */
+/* ══════════════════════════════════════════════════════ */
+
+/* Older iOS versions only support -webkit-backdrop-filter.
+   We explicitly declare both so both standard and webkit are set. */
+.glass,
+.glass-strong,
+.glass-dark,
+.glass-ultra,
+.glass-card,
+.mobile-nav-bar {
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+}
+
+/* ══════════════════════════════════════════════════════ */
+/*  iOS — PREVENT DOUBLE-TAP ZOOM                        */
+/* ══════════════════════════════════════════════════════ */
+
+/* Setting touch-action: manipulation on interactive elements
+   prevents the 300ms delay and double-tap-to-zoom on iOS */
+a, button, [role="button"],
+input[type="submit"], input[type="button"] {
+  touch-action: manipulation;
+}
+
+/* ══════════════════════════════════════════════════════ */
+/*  iOS — SAFE MODAL / BOTTOM DRAWER                     */
+/* ══════════════════════════════════════════════════════ */
+
+/* Bottom drawers must account for the home indicator on iPhone X+ */
+.drawer-safe {
+  padding-bottom: max(env(safe-area-inset-bottom, 16px), 16px);
 }

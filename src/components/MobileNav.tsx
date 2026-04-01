@@ -81,8 +81,8 @@ export default function MobileNav({ user }: Props) {
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: '100%', opacity: 0 }}
             transition={{ type: 'spring', stiffness: 380, damping: 36 }}
-            className="fixed bottom-[62px] left-0 right-0 z-50 bg-white rounded-t-[2rem] shadow-[0_-16px_48px_-8px_rgba(0,0,0,0.18)] max-h-[72dvh] overflow-y-auto"
-            style={{ paddingBottom: 'max(env(safe-area-inset-bottom, 8px), 8px)' }}
+            className="fixed bottom-[62px] left-0 right-0 z-50 bg-white rounded-t-[2rem] shadow-[0_-16px_48px_-8px_rgba(0,0,0,0.18)] max-h-[72dvh] overflow-y-auto drawer-safe"
+            style={{ paddingBottom: 'max(env(safe-area-inset-bottom, 16px), 16px)' }}
           >
             {/* Handle */}
             <div className="flex justify-center pt-3 pb-2">

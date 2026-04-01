@@ -37,6 +37,27 @@ export default {
       borderRadius: {
         '4xl': '2rem',
       },
+      height: {
+        'dvh': '100dvh',
+        'svh': '100svh',
+        'lvh': '100lvh',
+      },
+      minHeight: {
+        'dvh': '100dvh',
+        'svh': '100svh',
+        'lvh': '100lvh',
+      },
+      maxHeight: {
+        'dvh': '100dvh',
+        'half-dvh': '50dvh',
+        '72dvh': '72dvh',
+      },
+      spacing: {
+        'safe-top': 'env(safe-area-inset-top)',
+        'safe-bottom': 'env(safe-area-inset-bottom)',
+        'safe-left': 'env(safe-area-inset-left)',
+        'safe-right': 'env(safe-area-inset-right)',
+      },
     },
   },
   plugins: [],

@@ -48,13 +48,15 @@ export default function App() {
   }
 
   return (
-    <div className="flex h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50/20 mesh-bg relative overflow-hidden">
+    /* Use 100dvh instead of h-screen — dvh accounts for iOS Safari's collapsible toolbar */
+    <div className="flex bg-gradient-to-br from-slate-50 via-white to-blue-50/20 mesh-bg relative overflow-hidden"
+      style={{ height: '100dvh' }}>
       {/* Sidebar — hidden on mobile */}
       <div className="hidden md:block">
         <Sidebar user={user} onLogout={handleLogout} show={sidebarOpen} onClose={() => setSidebarOpen(false)} />
       </div>
 
-      <div className="flex-1 flex flex-col min-h-0 relative">
+      <div className="flex-1 flex flex-col min-h-0 relative overflow-hidden">
         <Header user={user} userLocation={userLocation} />
 
         {!sidebarOpen && (
@@ -69,7 +71,7 @@ export default function App() {
 
         {/* Main scrollable content — bottom padding clears the mobile nav + safe area */}
         <main
-          className="flex-1 overflow-y-auto overscroll-contain md:pb-0 bottom-sheet"
+          className="flex-1 overflow-y-auto overscroll-y-contain md:pb-0 bottom-sheet"
           style={{ paddingBottom: 'calc(72px + env(safe-area-inset-bottom, 0px))' }}
         >
           <AnimatePresence mode="wait" initial={false}>

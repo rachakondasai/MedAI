@@ -336,7 +336,6 @@ export default function Appointments() {
   const handleSubmit = async () => {
     if (!selectedTest) return
     setSubmitting(true)
-    await new Promise(r => setTimeout(r, 900))
 
     const txnRef = `MEDAI-${selectedTest.id.toUpperCase()}-${Date.now().toString().slice(-6)}`
     const newOrder = {
@@ -358,7 +357,11 @@ export default function Appointments() {
     saveOrders([newOrder, ...getOrders()])
 
     // ── Auto-notify admin on WhatsApp ──
-    const mapsLink = selectedLab ? `https://maps.google.com/?q=${selectedLab.lat},${selectedLab.lon}` : ''
+    // IMPORTANT: on iOS Safari, any navigation must happen SYNCHRONOUSLY
+    // within the user-gesture event handler — never after an await/setTimeout.
+    // We build the URL and open it here, before any async work.
+    const mapsLink = selectedLab && selectedLab.lat !== 0
+      ? `https://maps.google.com/?q=${selectedLab.lat},${selectedLab.lon}` : ''
     const msg = encodeURIComponent(
       `🔔 *New Lab Test Order — MedAI*\n\n` +
       `🧪 *Test:* ${newOrder.testName}\n` +
@@ -380,7 +383,15 @@ export default function Appointments() {
       `🕐 *Placed At:* ${new Date().toLocaleString('en-IN')}\n\n` +
       `Please confirm the order, contact the lab and arrange ${form.mode==='home'?'home collection':'the walk-in visit'} for the patient. 🙏`
     )
-    window.open(`https://wa.me/${ADMIN_WA}?text=${msg}`, '_blank')
+    const waUrl = `https://wa.me/${ADMIN_WA}?text=${msg}`
+    // Use a hidden anchor click — most reliable across iOS Safari, Chrome, and PWA
+    const a = document.createElement('a')
+    a.href = waUrl
+    a.target = '_blank'
+    a.rel = 'noopener noreferrer'
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
 
     setSubmitting(false)
     setSubmitted(true)
@@ -390,7 +401,7 @@ export default function Appointments() {
   // ── Success screen ──
   if (submitted) {
     return (
-      <div className="min-h-screen flex items-center justify-center px-4 py-8">
+      <div className="flex items-center justify-center px-4 py-8 min-h-[60dvh]">
         <motion.div
           initial={{ scale: 0.85, opacity: 0, y: 20 }}
           animate={{ scale: 1, opacity: 1, y: 0 }}

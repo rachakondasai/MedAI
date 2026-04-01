@@ -3,18 +3,21 @@
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <!-- viewport-fit=cover + no zoom: critical for iOS notch/Dynamic Island -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no" />
 
     <!-- CSP meta tag — matches nginx header; allows fonts, geolocation API, blob workers, Google APIs -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' blob: https://accounts.google.com https://apis.google.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; connect-src 'self' https://nominatim.openstreetmap.org https://api.openstreetmap.org https://overpass-api.de https://cdn.jsdelivr.net https://oauth2.googleapis.com https://accounts.google.com wss: ws:; img-src 'self' data: blob: https:; media-src 'self' blob:; worker-src 'self' blob:; child-src 'self' blob: https://accounts.google.com; frame-src https://accounts.google.com;" />
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' blob: https://accounts.google.com https://apis.google.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; connect-src 'self' https://nominatim.openstreetmap.org https://api.openstreetmap.org https://overpass-api.de https://overpass.kumi.systems https://maps.mail.ru https://cdn.jsdelivr.net https://oauth2.googleapis.com https://accounts.google.com wss: ws:; img-src 'self' data: blob: https:; media-src 'self' blob:; worker-src 'self' blob:; child-src 'self' blob: https://accounts.google.com; frame-src https://accounts.google.com;" />
 
-    <!-- Mobile App Meta -->
+    <!-- PWA / iOS Home Screen Meta -->
     <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <!-- default = white status bar (dark text). Use black-translucent only if your header is transparent -->
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="apple-mobile-web-app-title" content="MedAI" />
-    <meta name="theme-color" content="#0f172a" />
+    <meta name="theme-color" content="#ffffff" />
     <meta name="mobile-web-app-capable" content="yes" />
-    <meta name="format-detection" content="telephone=no" />
+    <!-- Prevent iOS from turning phone numbers into blue links -->
+    <meta name="format-detection" content="telephone=no, date=no, email=no, address=no" />
 
     <!-- Google Fonts — preconnect for performance, now allowed by CSP above -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -26,8 +29,14 @@
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     <!-- PWA Manifest -->
     <link rel="manifest" href="/manifest.json" />
-    <!-- iOS icons -->
+    <!-- iOS home-screen icon (use a real PNG for production) -->
     <link rel="apple-touch-icon" href="/vite.svg" />
+
+    <!-- iOS Safari: prevent elastic over-scroll on the document itself -->
+    <style>
+      html, body { height: 100%; overflow: hidden; }
+      #root      { height: 100%; overflow: hidden; }
+    </style>
   </head>
   <body>
     <div id="root"></div>

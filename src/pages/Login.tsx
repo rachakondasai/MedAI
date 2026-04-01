@@ -270,7 +270,10 @@ export default function Login({ onAuth }: Props) {
         )}
       </AnimatePresence>
 
-      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 flex items-center justify-center p-4 relative overflow-hidden">
+      <div
+        className="bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 flex items-center justify-center p-4 relative overflow-y-auto overflow-x-hidden"
+        style={{ minHeight: '100dvh' }}
+      >
         {/* Background orbs */}
         <FloatingOrb delay={0} size={500} color="rgba(16,185,129,0.06)" x="5%" y="15%" />
         <FloatingOrb delay={2} size={450} color="rgba(59,130,246,0.06)" x="55%" y="55%" />
